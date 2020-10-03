@@ -26,10 +26,10 @@ This is the repository for Fall 20 Devops Inventory Team. Professor : John Rofra
 
 ## Team Members
 
-1. [Arahant Ashok Kumar](https://github.com/arahant)
+1. [Arahant Ashok Kumar](https://github.com/arahant) : Product Owner
 2. [Arun Muthu](https://github.com/arungithub9)
-3. [Hardik Rokad](https://github.com/hardikr586)
-4. [Jiazhou Liu](https://github.com/602071349)
+3. [Hardik Rokad](https://github.com/hardikr586) 
+4. [Jiazhou Liu](https://github.com/602071349) : Scrum Master
 5. [Kainat Naeem](https://github.com/kainattnaeem)
 
 ## Version History
