@@ -17,6 +17,7 @@ import sys
 import logging
 from flask import Flask, jsonify, request, url_for, make_response, abort
 from flask_api import status  # HTTP Status Codes
+from werkzeug.exceptions import NotFound
 from flask_sqlalchemy import SQLAlchemy
 from service.model import Inventory, DataValidationError
 
@@ -119,15 +120,26 @@ def index():
 @app.route("/inventory", methods=["GET"])
 def list_inventories():
     """Returns a list of all inventories in the inventory"""
-    return "Some information about the inventory service", status.HTTP_200_OK
+    app.logger.info("Request for all inventories")
+    inventories = Inventory.all()
+    results = [inventory.serialize() for inventory in inventories]
+
+    app.logger.info("Returning %d inventories", len(results))
+    return make_response(jsonify(results), status.HTTP_200_OK)
 
 ################################################################################
 # RETRIEVE A RECORD
 ################################################################################
-@app.route("/inventory/<int:product_id>", methods=["GET"])
-def get_inventory(product_id):
-    """Returns the inventory with the given product_id"""
-    return "Some information about the inventory service", status.HTTP_200_OK
+@app.route("/inventory/<int:product_id>/<string:condition>", methods=["GET"])
+def get_inventory(product_id, condition):
+    """Returns the inventory with the given product_id and condition"""
+    app.logger.info("Request for inventory with product_id %d and condition %s", product_id, condition)
+    inventory = Inventory.find(product_id, condition)
+    if not inventory:
+        raise NotFound("Inventory with product_id {} and condition {} was not found".format(product_id, condition))
+
+    app.logger.info("Return inventory with product_id: %d and condition %s", product_id, condition)
+    return make_response(jsonify(inventory.serialize()), status.HTTP_200_OK)
 
 ################################################################################
 # CREATE A NEW RECORD
@@ -144,9 +156,9 @@ def create_inventory():
     inventory.deserialize(request.get_json())
     inventory.create()
     message = inventory.serialize()
-    location_url = url_for("get_inventory", product_id=inventory.product_id, _external=True)
+    location_url = url_for("get_inventory", product_id=inventory.product_id, condition=inventory.condition, _external=True)
 
-    app.logger.info("Inventory with Product ID [%s] created.", inventory.product_id)
+    app.logger.info("Inventory with Product ID [%d] created.", inventory.product_id)
     return make_response(
         jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
     )
@@ -155,18 +167,34 @@ def create_inventory():
 ################################################################################
 # UPDATE AN EXISTING RECORD
 ################################################################################
-@app.route("/inventory/<int:product_id>", methods=["PUT"])
-def update_inventory(product_id):
-    """Updates the inventory with the given product_id"""
-    return "Some information about the inventory service", status.HTTP_200_OK
+@app.route("/inventory/<int:product_id>/<string:condition>", methods=["PUT"])
+def update_inventory(product_id, condition):
+    """Updates the inventory with the given product_id and condition"""
+    app.logger.info("Request to update inventory with product_id: %d and condition: %s", product_id, condition)
+    check_content_type("application/json")
+    inventory = Inventory.find(product_id, condition)
+    if not inventory:
+        raise NotFound("Inventory with product_id {} and condition {} was not found.".format(product_id, condition))
+    inventory.deserialize(request.get_json())
+    inventory.update()
+
+    app.logger.info("Inventory with product_id %d and condition %s updated.", product_id, condition)
+    return make_response(jsonify(inventory.serialize()), status.HTTP_200_OK)
+
 
 ################################################################################
 # DELETE A RECORD
 ################################################################################
-@app.route("/inventory/<int:product_id>", methods=["DELETE"])
-def delete_inventory(product_id):
-    """Deletes a inventory with the given product_id"""
-    return "Some information about the inventory service", status.HTTP_204_OK
+@app.route("/inventory/<int:product_id>/<string:condition>", methods=["DELETE"])
+def delete_inventory(product_id, condition):
+    """Deletes an inventory with the given product_id and condition"""
+    app.logger.info("Request to delete inventory with product_id %d and condition %s", product_id, condition)
+    inventory = Inventory.find(product_id, condition)
+    if inventory:
+        inventory.delete()
+
+    app.logger.info("Inventory with product_id %d and condition %s deleted", product_id, condition)
+    return make_response("", status.HTTP_204_NO_CONTENT)
 
 ################################################################################
 #  U T I L I T Y   F U N C T I O N S

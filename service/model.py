@@ -89,7 +89,7 @@ class Inventory(db.Model):
 
     ######################################################################
     # VALIDATING DATA FORMATS
-    def validate_data(pid,cnd,qty,lvl,avl):
+    def validate_data(pid, cnd, qty, lvl, avl):
         args = []
 
         err_pid = Inventory.validate_data_product_id(pid)
@@ -118,8 +118,8 @@ class Inventory(db.Model):
         return True
 
     # Validating Product ID format
-    def validate_data_product_id(id):
-        return type(id) is int and id>0
+    def validate_data_product_id(pid):
+        return type(pid) is int and pid>0
 
     # validating Condition format
     def validate_data_condition(cnd):
@@ -149,7 +149,7 @@ class Inventory(db.Model):
 
     ######################################################################
     # UPDATE -
-    def save(self):
+    def update(self):
         """
         Updates an Inventory record to the database
         """
@@ -174,17 +174,17 @@ class Inventory(db.Model):
 
     # -
     @classmethod
-    def find(cls, by_id):
-        """ Finds an Inventory record by its ID """
-        logger.info("Processing lookup for id %s ...", by_id)
-        return cls.query.get(by_id)
+    def find(cls, pid, condition):
+        """ Finds an Inventory record by its product_id and condition """
+        logger.info("Processing lookup for product_id %d and condition %s ", pid, condition)
+        return cls.query.get((pid, condition))
 
     # -
     @classmethod
-    def find_or_404(cls, by_id):
-        """ Find an Inventory record by its ID """
-        logger.info("Processing lookup or 404 for id %s ...", by_id)
-        return cls.query.get_or_404(by_id)
+    def find_or_404(cls, pid, condition):
+        """ Find an Inventory record by its product_id and condition """
+        logger.info("Processing lookup or 404 for product_id %d and condition %s", pid, condition)
+        return cls.query.get_or_404((pid, condition))
 
     # -
     @classmethod
