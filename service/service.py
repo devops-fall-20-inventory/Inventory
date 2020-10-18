@@ -142,6 +142,21 @@ def get_inventory(product_id, condition):
     return make_response(jsonify(inventory.serialize()), status.HTTP_200_OK)
 
 ################################################################################
+# RETRIEVE RECORDS OF A PRODUCT ID
+################################################################################
+@app.route("/inventory/<int:product_id>", methods=["GET"])
+def get_inventory_by_pid(product_id):
+    """Returns the inventories with the given product_id"""
+    app.logger.info("Request for inventories with product_id %d", product_id)
+    inventories = Inventory.find_by_product_id(product_id)
+    if not inventories:
+        raise NotFound("Inventories with product_id {} were not found".format(product_id))
+    results = [inventory.serialize() for inventory in inventories]
+
+    app.logger.info("Return %d inventories with product_id: %d", len(results), product_id)
+    return make_response(jsonify(results), status.HTTP_200_OK)
+
+################################################################################
 # CREATE A NEW RECORD
 ################################################################################
 @app.route("/inventory", methods=["POST"])
