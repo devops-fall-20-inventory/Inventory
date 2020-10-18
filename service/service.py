@@ -5,11 +5,11 @@ Paths:
 
 ------
 
-GET /inventory - Returns a list of all records in the inventory
-GET /inventory/{product_id} - Returns the record with the given product_id
-POST /inventory - Creates a new record in the inventory
-PUT /inventory/{product_id} - Updates the record with the given product_id
-DELETE /pets/{product_id} - Deletes a record with the given product_id
+GET /inventory - Returns a list of all inventories in the inventory
+GET /inventory/{product_id} - Returns the inventory record with the given product_id
+POST /inventory - Creates a new inventory record in the inventory
+PUT /inventory/{product_id} - Updates the inventory record with the given product_id
+DELETE /inventory/{product_id} - Deletes an inventory record with the given product_id
 """
 
 import os
@@ -23,9 +23,11 @@ from service.model import Inventory, DataValidationError
 # Import Flask application
 from . import app
 
-######################################################################
+DEMO_MSG = "Inventory Demo REST API Service"
+
+################################################################################
 # Error Handlers
-######################################################################
+################################################################################
 @app.errorhandler(DataValidationError)
 def request_validation_error(error):
     """ Handles Value Errors from bad data """
@@ -95,57 +97,80 @@ def internal_server_error(error):
         status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
 
-######################################################################
+################################################################################
 # GET INDEX
-######################################################################
+################################################################################
 @app.route("/")
 def index():
     """ Root URL response """
-    return "Some information about the inventory service", status.HTTP_200_OK
+    app.logger.info("Request for Root URL")
+    return (
+        jsonify(
+            name=DEMO_MSG,
+            version="1.0",
+            paths=url_for("list_inventories", _external=True),
+        ),
+        status.HTTP_200_OK,
+    )
 
-######################################################################
+################################################################################
 # LIST ALL RECORDS
-######################################################################
+################################################################################
 @app.route("/inventory", methods=["GET"])
-def list_records():
-    """Returns a list of all records in the inventory"""
+def list_inventories():
+    """Returns a list of all inventories in the inventory"""
     return "Some information about the inventory service", status.HTTP_200_OK
 
-######################################################################
+################################################################################
 # RETRIEVE A RECORD
-######################################################################
+################################################################################
 @app.route("/inventory/<int:product_id>", methods=["GET"])
-def get_record(product_id):
-    """Returns the record with the given product_id"""
+def get_inventory(product_id):
+    """Returns the inventory with the given product_id"""
     return "Some information about the inventory service", status.HTTP_200_OK
 
-######################################################################
-# ADD A NEW RECORD
-######################################################################
+################################################################################
+# CREATE A NEW RECORD
+################################################################################
 @app.route("/inventory", methods=["POST"])
-def create_record():
-    """Creates a new record in the inventory"""
-    return "Some information about the inventory service", status.HTTP_201_OK
+def create_inventory():
+    """
+    Creates a new inventory in the Inventory DB
+    Based the data in the body that is posted
+    """
+    app.logger.info("Request to create an Inventory record")
+    check_content_type("application/json")
+    inventory = Inventory()
+    inventory.deserialize(request.get_json())
+    inventory.create()
+    message = inventory.serialize()
+    location_url = url_for("get_inventory", product_id=inventory.product_id, _external=True)
 
-######################################################################
+    app.logger.info("Inventory with Product ID [%s] created.", inventory.product_id)
+    return make_response(
+        jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+    )
+
+
+################################################################################
 # UPDATE AN EXISTING RECORD
-######################################################################
+################################################################################
 @app.route("/inventory/<int:product_id>", methods=["PUT"])
-def update_record(product_id):
-    """Updates the record with the given product_id"""
+def update_inventory(product_id):
+    """Updates the inventory with the given product_id"""
     return "Some information about the inventory service", status.HTTP_200_OK
 
-######################################################################
+################################################################################
 # DELETE A RECORD
-######################################################################
+################################################################################
 @app.route("/inventory/<int:product_id>", methods=["DELETE"])
-def delete_record(product_id):
-    """Deletes a record with the given product_id"""
+def delete_inventory(product_id):
+    """Deletes a inventory with the given product_id"""
     return "Some information about the inventory service", status.HTTP_204_OK
 
-######################################################################
+################################################################################
 #  U T I L I T Y   F U N C T I O N S
-######################################################################
+################################################################################
 def init_db():
     """ Initialies the SQLAlchemy app """
     global app
