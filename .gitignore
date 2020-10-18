@@ -133,3 +133,6 @@ dmypy.json
 
 # Mac OS junk
 .DS_Store
+
+# test log
+unittests.xml
