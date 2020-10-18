@@ -14,7 +14,7 @@
     <session id="-1692638567">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="1" />
+          <entry key="project.closed" value="2" />
           <entry key="project.open.time.1" value="1" />
           <entry key="project.open.time.2" value="1" />
           <entry key="project.opened" value="2" />
@@ -77,7 +77,7 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/service/service.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="286">
+            <state relative-caret-position="69">
               <caret line="151" column="11" selection-start-line="151" selection-start-column="11" selection-end-line="151" selection-end-column="11" />
               <folding>
                 <marker date="1603060069404" expanded="true" signature="5361:5897" ph="..." />
@@ -262,7 +262,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/service/service.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="286">
+        <state relative-caret-position="69">
           <caret line="151" column="11" selection-start-line="151" selection-start-column="11" selection-end-line="151" selection-end-column="11" />
           <folding>
             <marker date="1603060069404" expanded="true" signature="5361:5897" ph="..." />

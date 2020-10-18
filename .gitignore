@@ -136,3 +136,6 @@ dmypy.json
 
 # test log
 unittests.xml
+
+#idea  
+**/.idea/workspace.xml
