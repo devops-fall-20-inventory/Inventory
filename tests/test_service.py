@@ -10,7 +10,7 @@ import logging
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 from flask_api import status  # HTTP Status Codes
-from service.models import db
+from service.model import db
 from service.service import app, init_db
 
 ######################################################################
@@ -42,7 +42,7 @@ class TestYourResourceServer(TestCase):
 #  P L A C E   T E S T   C A S E S   H E R E
 ######################################################################
 
-    def test_index(self):
-        """ Test index call """
-        resp = self.app.get("/")
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+    # def test_index(self):
+    #     """ Test index call """
+    #     resp = self.app.get("/")
+    #     self.assertEqual(resp.status_code, status.HTTP_200_OK)
