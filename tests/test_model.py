@@ -49,7 +49,7 @@ class InventoryTest(unittest.TestCase):
         # pid,cnd,qty,lvl,avl = InventoryTest.get_data()
         global test_data
         global test_data_file
-        if test_data and len(test_data)==0:
+        if test_data and len(test_data) == 0:
             test_data = InventoryTest.read_test_data(test_data_file)
         for row in test_data:
             if not row or len(row)<model.MAX_ATTR:
@@ -79,7 +79,7 @@ class InventoryTest(unittest.TestCase):
         # pid,cnd,qty,lvl,avl = InventoryTest.get_data()
         global test_data
         global test_data_file
-        if test_data and len(test_data)==0:
+        if test_data and len(test_data) == 0:
             test_data = InventoryTest.read_test_data(test_data_file)
         for row in test_data:
             if not row or len(row)<model.MAX_ATTR:
@@ -139,6 +139,61 @@ class InventoryTest(unittest.TestCase):
             self.assertEqual(inventory.quantity, qty)
             self.assertEqual(inventory.restock_level, lvl)
             self.assertEqual(inventory.available, avl)
+
+    def test_inventory_update(self):
+        """Update an Inventory"""
+        inventory = Inventory(product_id=123456, condition="new", quantity=1, restock_level=10, available=1)
+        inventory.create()
+        inventory.product_id = 1234567
+        inventory.update()
+        inventories = Inventory.all()
+        self.assertEqual(len(inventories), 1)
+        self.assertEqual(inventories[0].product_id, 1234567)
+
+    def test_inventory_delete(self):
+        """Delete an Inventory"""
+        inventory = Inventory(product_id=123456, condition="new", quantity=1, restock_level=10, available=1)
+        inventory.create()
+        self.assertEqual(len(Inventory.all()), 1)
+        inventory.delete()
+        self.assertEqual(len(Inventory.all()), 0)
+
+    def test_find(self):
+        """Find an Inventory by product_id and condition"""
+        Inventory(product_id=123456, condition="new", quantity=1, restock_level=10, available=1).create()
+        inventory = Inventory(product_id=1234567, condition="new", quantity=1, restock_level=10, available=0)
+        inventory.create()
+        result = Inventory.find(inventory.product_id, inventory.condition)
+        self.assertIsNot(result, None)
+        self.assertEqual(result.product_id, 1234567)
+        self.assertEqual(result.condition, "new")
+        self.assertEqual(result.quantity, 1)
+        self.assertEqual(result.restock_level, 10)
+        self.assertEqual(result.available, 0)
+
+    def test_find_or_404(self):
+        Inventory(product_id=123456, condition="new", quantity=1, restock_level=10, available=1).create()
+        inventory = Inventory(product_id=1234567, condition="new", quantity=1, restock_level=10, available=0)
+        inventory.create()
+        result = Inventory.find_or_404(inventory.product_id, inventory.condition)
+        self.assertIsNot(result, None)
+        self.assertEqual(result.product_id, 1234567)
+        self.assertEqual(result.condition, "new")
+        self.assertEqual(result.quantity, 1)
+        self.assertEqual(result.restock_level, 10)
+        self.assertEqual(result.available, 0)
+
+    def test_find_by_product_id(self):
+        Inventory(product_id=123456, condition="new", quantity=1, restock_level=10, available=1).create()
+        Inventory(product_id=1234567, condition="used", quantity=2, restock_level=20, available=0).create()
+        inventories = Inventory.find_by_product_id(1234567)
+        self.assertEqual(inventories[0].product_id, 1234567)
+        self.assertEqual(inventories[0].condition, "used")
+        self.assertEqual(inventories[0].quantity, 2)
+        self.assertEqual(inventories[0].restock_level, 20)
+        self.assertEqual(inventories[0].available, 0)
+
+
 
     ######################################################################
     ## Helper
