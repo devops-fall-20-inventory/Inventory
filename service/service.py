@@ -279,7 +279,7 @@ def update_availablility(product_id, condition, available):
     prod.available = available
     prod.update()
 
-    if available==1:
+    if prod.available==1:
         app.logger.info("The product with ID %d that satisfies the condition %s is now available.", product_id, condition)
     else:
         app.logger.info("The product with ID %d that satisfies the condition %s is now unavailable.", product_id, condition)
