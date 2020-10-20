@@ -266,7 +266,6 @@ def update_stock(product_id, condition, available):
     """Updates the available attribute for the given product_id and condition"""
     app.logger.info("Sent request to update availability for the product ID %d and condition %s", product_id, condition)
     
-
     if available != 0 or available!=1:
         return bad_request("Incorrect value for available, can only accept 0 or 1")
 
@@ -274,13 +273,16 @@ def update_stock(product_id, condition, available):
     if not prod:
         raise NotFound("The product ID, condition pair does not exist.")
 
+    if prod.quantity==0 and available==1:
+        return forbidden("This product is currently out of stock and cannot be made available")
+
     prod.available = available
     prod.update()
 
-    if available==0:
+    if available==1:
         app.logger.info("The product with ID %d that satisfies the condition %s is now available.", product_id, condition)
     else:
-    app.logger.info("The product with ID %d that satisfies the condition %s is now unavailable.", product_id, condition)
+        app.logger.info("The product with ID %d that satisfies the condition %s is now unavailable.", product_id, condition)
     return make_response(jsonify(prod.serialize()), status.HTTP_200_OK)
 
 
