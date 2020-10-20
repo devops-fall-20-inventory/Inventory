@@ -73,6 +73,7 @@ class InventoryAPITest(TestCase):
         # Check the data is correct
         new_inventory = resp.get_json()
         self.assertTrue(new_inventory != None)
+        self.assertEqual(new_inventory["product_id"], test_inventory.serialize()['product_id'], "Product ID does not match")
         self.assertEqual(new_inventory["quantity"], test_inventory.serialize()['quantity'], "Quantity does not match")
         self.assertEqual(new_inventory["restock_level"], test_inventory.serialize()['restock_level'], "Restock level does not match")
         self.assertEqual(new_inventory["available"], test_inventory.serialize()['available'], "Availability does not match")
@@ -82,12 +83,12 @@ class InventoryAPITest(TestCase):
         resp = self.app.get(location, content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         new_inventory = resp.get_json()
-        if new_inventory != None:
-            self.assertTrue(new_inventory != None)
-            self.assertEqual(new_inventory["quantity"], test_inventory.serialize()['quantity'], "Quantity does not match")
-            self.assertEqual(new_inventory["restock_level"], test_inventory.serialize()['restock_level'], "Restock level does not match")
-            self.assertEqual(new_inventory["available"], test_inventory.serialize()['available'], "Availability does not match")
-            self.assertEqual(new_inventory["condition"], test_inventory.serialize()['condition'], "Conditions do not match")
+        self.assertTrue(new_inventory != None)
+        self.assertEqual(new_inventory["product_id"], test_inventory.serialize()['product_id'], "Product ID does not match")
+        self.assertEqual(new_inventory["quantity"], test_inventory.serialize()['quantity'], "Quantity does not match")
+        self.assertEqual(new_inventory["restock_level"], test_inventory.serialize()['restock_level'], "Restock level does not match")
+        self.assertEqual(new_inventory["available"], test_inventory.serialize()['available'], "Availability does not match")
+        self.assertEqual(new_inventory["condition"], test_inventory.serialize()['condition'], "Conditions do not match")
 
     # -
     def _create_inventories(self, count):
