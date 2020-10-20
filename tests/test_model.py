@@ -61,7 +61,7 @@ class InventoryTest(unittest.TestCase):
         self.assertIsNot(data, None)
         self.assertTrue(len(data)>0)
         for row in data:
-            if len(row)<model.MAX_ATTR:
+            if len(row)<model.MAX_ATTR+1:
                 continue
             self.call_serialize(int(row[0]),row[1],int(row[2]),int(row[3]),int(row[4]),int(row[5]))
 
@@ -89,7 +89,7 @@ class InventoryTest(unittest.TestCase):
         self.assertIsNot(data, None)
         self.assertTrue(len(data)>0)
         for row in data:
-            if len(row)<model.MAX_ATTR:
+            if len(row)<model.MAX_ATTR+1:
                 continue
             self.call_deserialize(int(row[0]),row[1],int(row[2]),int(row[3]),int(row[4]),int(row[5]))
 
@@ -154,14 +154,14 @@ class InventoryTest(unittest.TestCase):
     ######################################################################
     ## Database
     ######################################################################
-    # 
+    #
     def test_create(self):
         """ Create a inventory and assert that it exists """
         data = InventoryFactory.read_test_data()
         self.assertIsNot(data, None)
         self.assertTrue(len(data)>0)
         for row in data:
-            if len(row)<model.MAX_ATTR:
+            if len(row)<model.MAX_ATTR+1:
                 continue
             self.call_create(int(row[0]),row[1],int(row[2]),int(row[3]),int(row[4]),int(row[5]))
 
