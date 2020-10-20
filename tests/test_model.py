@@ -44,6 +44,12 @@ class InventoryTest(unittest.TestCase):
         db.session.remove()
         db.drop_all()
 
+    def test_repr(self):
+        """ Test Inventory __repr__ """
+        pid = 1234567
+        inventory = Inventory(product_id=pid)
+        msg = inventory.__repr__()
+
     def test_serialize(self):
         """ Test serialization of a Inventory """
         pid = 1234567
@@ -95,27 +101,33 @@ class InventoryTest(unittest.TestCase):
         inventory = Inventory()
         self.assertRaises(DataValidationError, inventory.deserialize, data)
 
+        data = {
+            "available"     : 1
+        }
+        self.assertRaises(DataValidationError, inventory.deserialize, data)
+
     def test_validate_data(self):
         """ Testing validate_data_xxx """
-        pid = 1234567
-        cnd = "new"
-        qty = 4
-        lvl = 3
-        avl = 1
+        self.call_validate_data(1234567,"new",4,3,1,True)
+        self.call_validate_data(-1234567,"new1",-1,-1,-1,False)
+
+    def call_validate_data(self,pid,cnd,qty,lvl,avl,res):
         inventory = Inventory(product_id=pid, condition=cnd, quantity=qty, restock_level=lvl, available=avl)
         self.assertTrue(inventory != None)
-        err_pid = inventory.validate_data_product_id()
-        self.assertEqual(err_pid,True)
-        err_cnd = inventory.validate_data_condition()
-        self.assertEqual(err_cnd,True)
-        err_qty = inventory.validate_data_quantity()
-        self.assertEqual(err_qty,True)
-        err_lvl = inventory.validate_data_restock_level()
-        self.assertEqual(err_lvl,True)
-        err_avl = inventory.validate_data_available()
-        self.assertEqual(err_avl,True)
-        err = inventory.validate_data()
-        self.assertEqual(err,True)
+        res_pid = inventory.validate_data_product_id()
+        self.assertEqual(res_pid,res)
+        res_cnd = inventory.validate_data_condition()
+        self.assertEqual(res_cnd,res)
+        res_qty = inventory.validate_data_quantity()
+        self.assertEqual(res_qty,res)
+        res_lvl = inventory.validate_data_restock_level()
+        self.assertEqual(res_lvl,res)
+        res_avl = inventory.validate_data_available()
+        self.assertEqual(res_avl,res)
+        try:
+            err = inventory.validate_data()
+        except DataValidationError as err:
+            print(err)
 
     ######################################################################
     ## Database

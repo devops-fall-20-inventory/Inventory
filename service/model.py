@@ -72,9 +72,7 @@ class Inventory(db.Model):
         except KeyError as error:
             raise DataValidationError("Invalid Inventory record: missing " + error.args[0])
         except TypeError as error:
-            raise DataValidationError(
-                "Invalid Inventory record: body of request contained" "bad or no data"
-            )
+            raise DataValidationError("Invalid Inventory record: body of request contained" "bad or no data")
         return self
 
     @classmethod
@@ -92,27 +90,27 @@ class Inventory(db.Model):
     def validate_data(self):
         args = []
 
-        err_pid = self.validate_data_product_id()
-        if not err_pid:
+        res_pid = self.validate_data_product_id()
+        if not res_pid:
             args.append(ATTR_PRODUCT_ID)
 
-        err_cnd = self.validate_data_condition()
-        if not err_cnd:
+        res_cnd = self.validate_data_condition()
+        if not res_cnd:
             args.append(ATTR_CONDITION)
 
-        err_qty = self.validate_data_quantity()
-        if not err_qty:
+        res_qty = self.validate_data_quantity()
+        if not res_qty:
             args.append(ATTR_QUANTITY)
 
-        err_lvl = self.validate_data_restock_level()
-        if not err_lvl:
+        res_lvl = self.validate_data_restock_level()
+        if not res_lvl:
             args.append(ATTR_RESTOCK_LEVEL)
 
-        err_avl = self.validate_data_available()
-        if not err_avl:
+        res_avl = self.validate_data_available()
+        if not res_avl:
             args.append(ATTR_AVAILABLE)
 
-        if not (err_pid and err_cnd and err_qty and err_lvl and err_avl):
+        if not (res_pid and res_cnd and res_qty and res_lvl and res_avl):
             msg = "Error in data arguments: ".format(args)
             raise DataValidationError(msg)
         return True
