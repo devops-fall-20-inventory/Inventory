@@ -149,9 +149,9 @@ def get_inventory_by_pid(product_id):
     """Returns the inventories with the given product_id"""
     app.logger.info("Request for inventories with product_id %d", product_id)
     inventories = Inventory.find_by_product_id(product_id)
-    if not inventories:
-        raise NotFound("Inventories with product_id {} were not found".format(product_id))
     results = [inventory.serialize() for inventory in inventories]
+    if len(results) == 0:
+        raise NotFound("Inventories with product_id {} were not found".format(product_id))
 
     app.logger.info("Return %d inventories with product_id: %d", len(results), product_id)
     return make_response(jsonify(results), status.HTTP_200_OK)
