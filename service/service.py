@@ -59,7 +59,7 @@ def not_found(error):
     )
 
 @app.errorhandler(status.HTTP_403_FORBIDDEN)
-def not_found(error):
+def forbidden(error):
     """ Handles resources that cant be modified 403 FORBIDDEN . Eg : stock level less than 0 changes """
     message = str(error)
     app.logger.warning(message)
@@ -250,6 +250,8 @@ def update_stock(product_id, condition, operation, amount):
         msg_tmp = "Added "
     else:
         inventory.quantity = inventory.quantity - amount
+        if inventory.quantity < 0:
+            return forbidden("Unable to perform operation. Current stock level is lesser than specified subtract amount. Stock quantity can't become negative")
         msg_tmp = "Removed "
         
     inventory.update()
