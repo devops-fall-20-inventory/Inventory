@@ -58,6 +58,16 @@ def not_found(error):
         status.HTTP_404_NOT_FOUND,
     )
 
+@app.errorhandler(status.HTTP_403_FORBIDDEN)
+def not_found(error):
+    """ Handles resources that cant be modified 403 FORBIDDEN . Eg : stock level less than 0 changes """
+    message = str(error)
+    app.logger.warning(message)
+    return (
+        jsonify(status=status.HTTP_403_FORBIDDEN, error="Forbidden", message=message),
+        status.HTTP_403_FORBIDDEN,
+    )
+
 @app.errorhandler(status.HTTP_405_METHOD_NOT_ALLOWED)
 def method_not_supported(error):
     """ Handles unsuppoted HTTP methods with 405_METHOD_NOT_SUPPORTED """
@@ -224,10 +234,10 @@ def update_stock(product_id, condition, operation, amount):
     
 
     if amount == 0:
-        raise BadRequest("Wrong update amount parameter specified . Amount can only be a non zero whole number Eg : /inventory/123/new/add/1")
+        return bad_request("Wrong update amount parameter specified . Amount can only be a non zero whole number Eg : /inventory/123/new/add/1")
 
     if operation != "add" and operation != "sub":
-        raise BadRequest("Wrong operation specified. Operation can only be add or sub in http request. Eg : /inventory/123/new/add/1")
+        return bad_request("Wrong operation specified. Operation can only be add or sub in http request. Eg : /inventory/123/new/add/1")
 
     inventory = Inventory.find(product_id, condition)
     if not inventory:
