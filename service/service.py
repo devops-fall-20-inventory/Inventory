@@ -9,6 +9,7 @@ GET /inventory - Returns a list of all inventories in the inventory
 GET /inventory/{product_id} - Returns the inventory record with the given product_id
 POST /inventory - Creates a new inventory record in the inventory
 PUT /inventory/{product_id} - Updates the inventory record with the given product_id
+PUT /inventory/{product_id}/{operation}/{amount} - Updates quantity for a given product_id by adding or subtracting amount. operation is add or sub
 DELETE /inventory/{product_id} - Deletes an inventory record with the given product_id
 """
 
@@ -18,6 +19,7 @@ import logging
 from flask import Flask, jsonify, request, url_for, make_response, abort
 from flask_api import status  # HTTP Status Codes
 from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import BadRequest
 from flask_sqlalchemy import SQLAlchemy
 from service.model import Inventory, DataValidationError
 
@@ -54,6 +56,16 @@ def not_found(error):
     return (
         jsonify(status=status.HTTP_404_NOT_FOUND, error="Not Found", message=message),
         status.HTTP_404_NOT_FOUND,
+    )
+
+@app.errorhandler(status.HTTP_403_FORBIDDEN)
+def forbidden(error):
+    """ Handles resources that cant be modified 403 FORBIDDEN . Eg : stock level less than 0 changes """
+    message = str(error)
+    app.logger.warning(message)
+    return (
+        jsonify(status=status.HTTP_403_FORBIDDEN, error="Forbidden", message=message),
+        status.HTTP_403_FORBIDDEN,
     )
 
 @app.errorhandler(status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -210,6 +222,42 @@ def delete_inventory(product_id, condition):
 
     app.logger.info("Inventory with product_id %d and condition %s deleted", product_id, condition)
     return make_response("", status.HTTP_204_NO_CONTENT)
+
+
+################################################################################
+# UPDATE AN EXISTING PRODUCT's QUANTITY 
+################################################################################
+@app.route("/inventory/<int:product_id>/<string:condition>/<string:operation>/<int:amount>", methods=["PUT"])
+def update_stock(product_id, condition, operation, amount):
+    """Updates the inventory with the given product_id and condition"""
+    app.logger.info("Request to update quantity of product in inventory with product_id %d and condition %s", product_id, condition)
+    
+
+    if amount == 0:
+        return bad_request("Wrong update amount parameter specified . Amount can only be a non zero whole number Eg : /inventory/123/new/add/1")
+
+    if operation != "add" and operation != "sub":
+        return bad_request("Wrong operation specified. Operation can only be add or sub in http request. Eg : /inventory/123/new/add/1")
+
+    inventory = Inventory.find(product_id, condition)
+    if not inventory:
+        raise NotFound("Inventory with product_id {} and condition {} was not found.".format(product_id, condition))
+    
+    msg_tmp = " "
+
+    if operation == "add":
+        inventory.quantity = inventory.quantity + amount
+        msg_tmp = "Added "
+    else:
+        inventory.quantity = inventory.quantity - amount
+        if inventory.quantity < 0:
+            return forbidden("Unable to perform operation. Current stock level is lesser than specified subtract amount. Stock quantity can't become negative")
+        msg_tmp = "Removed "
+        
+    inventory.update()
+    app.logger.info(msg_tmp+"%d items having product_id %d and condition %s.", amount, product_id, condition)
+    return make_response(jsonify(inventory.serialize()), status.HTTP_200_OK)
+
 
 ################################################################################
 #  U T I L I T Y   F U N C T I O N S
