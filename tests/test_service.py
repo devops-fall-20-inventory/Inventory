@@ -1,9 +1,6 @@
 """
 Inventory API Service Test Suite
-
 Test cases can be run with the following:
-  nosetests -v --with-spec --spec-color
-  coverage report -m
 """
 import os
 import logging
@@ -22,7 +19,7 @@ DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost
 #  T E S T   C A S E S
 ######################################################################
 class InventoryAPITest(TestCase):
-    """ Inventory REST API Services Tests """
+    """ Inventory Services Tests """
 
     @classmethod
     def setUpClass(cls):

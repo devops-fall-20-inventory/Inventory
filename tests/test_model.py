@@ -10,19 +10,15 @@ import unittest
 from service import app
 import service.model as model
 from service.model import Inventory, DataValidationError, db
+from .inventory_factory import InventoryFactory
 
 DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres")
-test_data = []
-test_data_file = "data_to_test.csv"
 
 ################################################################################
 #  Inventory Model test cases
 ################################################################################
 class InventoryTest(unittest.TestCase):
 
-    ######################################################################
-    ## Utility
-    ######################################################################
     @classmethod
     def setUpClass(cls):
         """ These run once before Test suite """
@@ -50,15 +46,29 @@ class InventoryTest(unittest.TestCase):
         inventory = Inventory(product_id=pid)
         msg = inventory.__repr__()
 
+    ######################################################################
+    ## Utility
+    ######################################################################
+    #
     def test_serialize(self):
         """ Test serialization of a Inventory """
-        pid = 1234567
-        cnd = "new"
-        qty = 4
-        lvl = 3
-        avl = 1
+        # pid = 1234567
+        # cnd = "new"
+        # qty = 4
+        # lvl = 3
+        # avl = 1
+        data = InventoryFactory.read_test_data()
+        self.assertIsNot(data, None)
+        self.assertTrue(len(data)>0)
+        for row in data:
+            if len(row)<model.MAX_ATTR:
+                continue
+            self.call_serialize(int(row[0]),row[1],int(row[2]),int(row[3]),int(row[4]),int(row[5]))
+
+    def call_serialize(self,pid,cnd,qty,lvl,avl,err):
         inventory = Inventory(product_id=pid, condition=cnd, quantity=qty, restock_level=lvl, available=avl)
-        # self.assertRaises(DataValidationError, inventory.validate_data)
+        if err==1:
+            self.assertRaises(DataValidationError, inventory.validate_data)
         data = inventory.serialize()
         self.assertNotEqual(data, None)
         self.assertIn("product_id", data)
@@ -72,13 +82,18 @@ class InventoryTest(unittest.TestCase):
         self.assertIn("available", data)
         self.assertEqual(data["available"], avl)
 
+    #
     def test_deserialize(self):
         """ Test deserialization of a Inventory """
-        pid = 1234567
-        cnd = "new"
-        qty = 4
-        lvl = 3
-        avl = 1
+        data = InventoryFactory.read_test_data()
+        self.assertIsNot(data, None)
+        self.assertTrue(len(data)>0)
+        for row in data:
+            if len(row)<model.MAX_ATTR:
+                continue
+            self.call_deserialize(int(row[0]),row[1],int(row[2]),int(row[3]),int(row[4]),int(row[5]))
+
+    def call_deserialize(self,pid,cnd,qty,lvl,avl,err):
         data = {
             "product_id"    : pid,
             "condition"     : cnd,
@@ -100,10 +115,7 @@ class InventoryTest(unittest.TestCase):
         data = "this is not a dictionary"
         inventory = Inventory()
         self.assertRaises(DataValidationError, inventory.deserialize, data)
-
-        data = {
-            "available"     : 1
-        }
+        data = {}
         self.assertRaises(DataValidationError, inventory.deserialize, data)
 
     def test_validate_data(self):
@@ -129,19 +141,35 @@ class InventoryTest(unittest.TestCase):
         except DataValidationError as err:
             print(err)
 
+    def read_test_data(self):
+        """
+        Read data for test cases into test_data
+        """
+        data = InventoryFactory.read_test_data()
+        self.assertIsNot(data, None)
+        self.assertTrue(len(data)>0)
+        for row in data:
+            print(row)
+
     ######################################################################
     ## Database
     ######################################################################
+    # 
     def test_create(self):
         """ Create a inventory and assert that it exists """
-        pid = 1234567
-        cnd = "new"
-        qty = 4
-        lvl = 3
-        avl = 1
+        data = InventoryFactory.read_test_data()
+        self.assertIsNot(data, None)
+        self.assertTrue(len(data)>0)
+        for row in data:
+            if len(row)<model.MAX_ATTR:
+                continue
+            self.call_create(int(row[0]),row[1],int(row[2]),int(row[3]),int(row[4]),int(row[5]))
+
+    def call_create(self,pid,cnd,qty,lvl,avl,err):
         inventory = Inventory(product_id=pid, condition=cnd, quantity=qty, restock_level=lvl, available=avl)
+        if err==1:
+            self.assertRaises(DataValidationError, inventory.validate_data)
         inventory.create()
-        # self.assertRaises(DataValidationError, inventory.validate_data)
         self.assertTrue(inventory != None)
         self.assertEqual(inventory.product_id, pid)
         self.assertEqual(inventory.condition, cnd)
@@ -149,6 +177,7 @@ class InventoryTest(unittest.TestCase):
         self.assertEqual(inventory.restock_level, lvl)
         self.assertEqual(inventory.available, avl)
 
+    #
     def test_update(self):
         """Update an Inventory"""
         inventory = Inventory(product_id=123456, condition="new", quantity=1, restock_level=10, available=1)
@@ -159,6 +188,7 @@ class InventoryTest(unittest.TestCase):
         self.assertEqual(len(inventories), 1)
         self.assertEqual(inventories[0].product_id, 1234567)
 
+    #
     def test_delete(self):
         """Delete an Inventory"""
         inventory = Inventory(product_id=123456, condition="new", quantity=1, restock_level=10, available=1)
@@ -167,6 +197,7 @@ class InventoryTest(unittest.TestCase):
         inventory.delete()
         self.assertEqual(len(Inventory.all()), 0)
 
+    #
     def test_find(self):
         """Find an Inventory by product_id and condition"""
         Inventory(product_id=123456, condition="new", quantity=1, restock_level=10, available=1).create()
@@ -180,6 +211,7 @@ class InventoryTest(unittest.TestCase):
         self.assertEqual(result.restock_level, 10)
         self.assertEqual(result.available, 0)
 
+    #
     def test_find_or_404(self):
         Inventory(product_id=123456, condition="new", quantity=1, restock_level=10, available=1).create()
         inventory = Inventory(product_id=1234567, condition="new", quantity=1, restock_level=10, available=0)
@@ -192,6 +224,7 @@ class InventoryTest(unittest.TestCase):
         self.assertEqual(result.restock_level, 10)
         self.assertEqual(result.available, 0)
 
+    #
     def test_find_by_product_id(self):
         Inventory(product_id=123456, condition="new", quantity=1, restock_level=10, available=1).create()
         Inventory(product_id=1234567, condition="used", quantity=2, restock_level=20, available=0).create()
@@ -201,54 +234,6 @@ class InventoryTest(unittest.TestCase):
         self.assertEqual(inventories[0].quantity, 2)
         self.assertEqual(inventories[0].restock_level, 20)
         self.assertEqual(inventories[0].available, 0)
-
-
-
-    ######################################################################
-    ## Helper
-    ######################################################################
-    @staticmethod
-    def get_data(type=model.ATTR_DEFAULT):
-        if len(sys.argv)<model.MAX_ATTR+1:
-            return None,None,None,None,None
-        elif type==model.ATTR_DEFAULT or len(sys.argv)>model.MAX_ATTR:
-            pid = sys.argv[model.ATTR_PRODUCT_ID]
-            cnd = sys.argv[model.ATTR_CONDITION]
-            qty = sys.argv[model.ATTR_QUANTITY]
-            lvl = sys.argv[model.ATTR_RESTOCK_LEVEL]
-            avl = sys.argv[model.ATTR_AVAILABLE]
-            return pid,cnd,qty,lvl,avl
-        else:
-            sys.argv[type]
-
-    # Reading test cases from file
-    @staticmethod
-    def read_test_data(file=test_data_file):
-        """
-        Read data for test cases into test_data
-        """
-        data = []
-        try:
-            fr = open(file,'r')
-            line = fr.readline()
-            row  = line.strip().split(',')
-            data.append(row)
-            while line:
-                line = fr.readline()
-                row  = line.strip().split(',')
-                data.append(row)
-            fr.close()
-            return data
-        except IOError as err:
-            print(err)
-        finally:
-            return data
-
-    @staticmethod
-    def get_product_data():
-        with open(test_data_file, delimiter=',') as csvfile:
-            reader = csv.DictReader(csvfile)
-            print(reader)
 
 ######################################################################
 #   M A I N
