@@ -173,3 +173,24 @@ class InventoryAPITest(TestCase):
             "/inventory/{}/{}".format(test_inventory.product_id, test_inventory.condition), content_type="application/json"
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        
+    def test_update_availability(self):
+        """Update an existing Inventory"""
+        test_inventory = InventoryFactory()
+        resp = self.app.post(
+            "/inventory", json=test_inventory.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        new_inventory = resp.get_json()
+        new_inventory["available"] = 0
+        resp = self.app.put(
+            "/inventory/{}/{}".format(new_inventory["product_id"], new_inventory["condition"]),
+            json=new_inventory,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        final_inventory = resp.get_json()
+        self.assertEqual(final_inventory["available"], 0, "The available parameter is not what was expected")
+
+

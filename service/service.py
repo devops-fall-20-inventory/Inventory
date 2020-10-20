@@ -258,6 +258,32 @@ def update_stock(product_id, condition, operation, amount):
     app.logger.info(msg_tmp+"%d items having product_id %d and condition %s.", amount, product_id, condition)
     return make_response(jsonify(inventory.serialize()), status.HTTP_200_OK)
 
+################################################################################
+# UPDATE AN EXISTING PRODUCT'S AVAILABILITY
+################################################################################
+@app.route("/inventory/<int:product_id>/<string:condition>/<int:available>", methods=["PUT"])
+def update_stock(product_id, condition, available):
+    """Updates the available attribute for the given product_id and condition"""
+    app.logger.info("Sent request to update availability for the product ID %d and condition %s", product_id, condition)
+    
+
+    if available != 0 or available!=1:
+        return bad_request("Incorrect value for available, can only accept 0 or 1")
+
+    prod = Inventory.find(product_id, condition)
+    if not prod:
+        raise NotFound("The product ID, condition pair does not exist.")
+
+    prod.available = available
+    prod.update()
+
+    if available==0:
+        app.logger.info("The product with ID %d that satisfies the condition %s is now available.", product_id, condition)
+    else:
+    app.logger.info("The product with ID %d that satisfies the condition %s is now unavailable.", product_id, condition)
+    return make_response(jsonify(prod.serialize()), status.HTTP_200_OK)
+
+
 
 ################################################################################
 #  U T I L I T Y   F U N C T I O N S
