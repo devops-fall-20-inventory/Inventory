@@ -20,7 +20,7 @@ The inventory resource keeps track of how many of each product we have in our wa
 
 ## Getting Started
 
-### Interface
+### Interfaces
     Returns a list of all inventories in the inventory
     GET /inventory
 
@@ -49,8 +49,8 @@ The inventory resource keeps track of how many of each product we have in our wa
           "condition":"new",
           "available":1
         }
-###Test
-    To run and test the code, you can use the following command:
+###Test and Running
+   To run and test the code, you can use the following command:
 	vagrant up
         vagrant ssh
         cd /vagrant
@@ -58,7 +58,7 @@ The inventory resource keeps track of how many of each product we have in our wa
    Then you can test the application in the browser from you host machine, or
    you can use Postman for sending http requests.
 
-   You can also type nosetests under /vagrant to check different test cases and    the overall coverage.
+   You can also type nosetests under /vagrant to check different test cases and the overall coverage.
     
     
 
