@@ -16,13 +16,51 @@ The inventory resource keeps track of how many of each product we have in our wa
 ## Version History
 
 1. Initial Repository Setup
+2. application runs locally
 
 ## Getting Started
 
-### Dependencies
+### Interface
+    Returns a list of all inventories in the inventory
+    GET /inventory
 
-### Installing
+    Returns the inventory with the given product_id and condition
+    GET /inventory/<int:product_id>/<string:condition>
 
-### Executing program
+    Returns the inventories with the given product_id
+    GET /inventory/<int:product_id>
 
-## Help
+    Creates a new inventory in the Inventory DB
+    based on the JSON data in the request body 
+    POST /inventory
+
+    Updates the inventory with the given product_id and condition
+    based on the JSON data in the request body 
+    PUT /inventory/<int:product_id>/<string:condition>
+
+    Deletes an inventory with the given product_id and condition
+    DELETE /inventory/<int:product_id>/<string:condition>
+
+    Sample JSON data format:
+	{
+	  "product_id":1234567,
+          "quantity":1,
+          "restock_level":10,
+          "condition":"new",
+          "available":1
+        }
+###Test
+    To run and test the code, you can use the following command:
+	vagrant up
+        vagrant ssh
+        cd /vagrant
+        FLASK_APP=service:app flask run -h 0.0.0.0
+   Then you can test the application in the browser from you host machine, or
+   you can use Postman for sending http requests.
+
+   You can also type nosetests under /vagrant to check different test cases and    the overall coverage.
+    
+    
+
+    
+
