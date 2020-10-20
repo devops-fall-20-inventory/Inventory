@@ -262,7 +262,7 @@ def update_stock(product_id, condition, operation, amount):
 # UPDATE AN EXISTING PRODUCT'S AVAILABILITY
 ################################################################################
 @app.route("/inventory/<int:product_id>/<string:condition>/<int:available>", methods=["PUT"])
-def update_stock(product_id, condition, available):
+def update_availablility(product_id, condition, available):
     """Updates the available attribute for the given product_id and condition"""
     app.logger.info("Sent request to update availability for the product ID %d and condition %s", product_id, condition)
     
