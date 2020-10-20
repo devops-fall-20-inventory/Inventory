@@ -19,6 +19,7 @@ import logging
 from flask import Flask, jsonify, request, url_for, make_response, abort
 from flask_api import status  # HTTP Status Codes
 from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import BadRequest
 from flask_sqlalchemy import SQLAlchemy
 from service.model import Inventory, DataValidationError
 
@@ -220,6 +221,14 @@ def delete_inventory(product_id, condition):
 def update_stock(product_id, condition, operation, amount):
     """Updates the inventory with the given product_id and condition"""
     app.logger.info("Request to update quantity of product in inventory with product_id %d and condition %s", product_id, condition)
+    
+
+    if amount == 0:
+        raise BadRequest("Wrong update amount parameter specified . Amount can only be a non zero whole number Eg : /inventory/123/new/add/1")
+
+    if operation != "add" and operation != "sub":
+        raise BadRequest("Wrong operation specified. Operation can only be add or sub in http request. Eg : /inventory/123/new/add/1")
+
     inventory = Inventory.find(product_id, condition)
     if not inventory:
         raise NotFound("Inventory with product_id {} and condition {} was not found.".format(product_id, condition))
@@ -229,12 +238,10 @@ def update_stock(product_id, condition, operation, amount):
     if operation == "add":
         inventory.quantity = inventory.quantity + amount
         msg_tmp = "Added "
-    elif operation == "sub":
+    else:
         inventory.quantity = inventory.quantity - amount
         msg_tmp = "Removed "
-    else:
-        raise bad_request("Wrong operation specified. Operation can only be add or sub in http request. Eg : /inventory/123/new/add/1")
-
+        
     inventory.update()
     app.logger.info(msg_tmp+"%d items having product_id %d and condition %s.", amount, product_id, condition)
     return make_response(jsonify(inventory.serialize()), status.HTTP_200_OK)
