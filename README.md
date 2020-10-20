@@ -49,7 +49,7 @@ The inventory resource keeps track of how many of each product we have in our wa
           "condition":"new",
           "available":1
         }
-###Test and Running
+### Test and Running
    To run and test the code, you can use the following command:
 	vagrant up
         vagrant ssh
