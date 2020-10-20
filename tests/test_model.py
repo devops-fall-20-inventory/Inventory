@@ -44,103 +44,100 @@ class InventoryTest(unittest.TestCase):
         db.session.remove()
         db.drop_all()
 
-    def test_inventory_serialize(self):
+    def test_serialize(self):
         """ Test serialization of a Inventory """
-        # pid,cnd,qty,lvl,avl = InventoryTest.get_data()
-        global test_data
-        global test_data_file
-        if test_data and len(test_data) == 0:
-            test_data = InventoryTest.read_test_data(test_data_file)
-        for row in test_data:
-            if not row or len(row)<model.MAX_ATTR:
-                continue;
-            pid = row[0]
-            cnd = row[1]
-            qty = row[2]
-            lvl = row[3]
-            avl = row[4]
-            self.assertRaises(DataValidationError, Inventory.validate_data, pid,cnd,qty,lvl,avl)
-            inventory = Inventory(product_id=pid, condition=cnd, quantity=qty, restock_level=lvl, available=avl)
-            data = inventory.serialize()
-            self.assertNotEqual(data, None)
-            self.assertIn("product_id", data)
-            self.assertEqual(data["product_id"], pid)
-            self.assertIn("condition", data)
-            self.assertEqual(data["condition"], cnd)
-            self.assertIn("quantity", data)
-            self.assertEqual(data["quantity"], qty)
-            self.assertIn("restock_level", data)
-            self.assertEqual(data["restock_level"], lvl)
-            self.assertIn("available", data)
-            self.assertEqual(data["available"], avl)
+        pid = 1234567
+        cnd = "new"
+        qty = 4
+        lvl = 3
+        avl = 1
+        inventory = Inventory(product_id=pid, condition=cnd, quantity=qty, restock_level=lvl, available=avl)
+        # self.assertRaises(DataValidationError, inventory.validate_data)
+        data = inventory.serialize()
+        self.assertNotEqual(data, None)
+        self.assertIn("product_id", data)
+        self.assertEqual(data["product_id"], pid)
+        self.assertIn("condition", data)
+        self.assertEqual(data["condition"], cnd)
+        self.assertIn("quantity", data)
+        self.assertEqual(data["quantity"], qty)
+        self.assertIn("restock_level", data)
+        self.assertEqual(data["restock_level"], lvl)
+        self.assertIn("available", data)
+        self.assertEqual(data["available"], avl)
 
-    def test_inventory_deserialize(self):
+    def test_deserialize(self):
         """ Test deserialization of a Inventory """
-        # pid,cnd,qty,lvl,avl = InventoryTest.get_data()
-        global test_data
-        global test_data_file
-        if test_data and len(test_data) == 0:
-            test_data = InventoryTest.read_test_data(test_data_file)
-        for row in test_data:
-            if not row or len(row)<model.MAX_ATTR:
-                continue;
-            pid = row[0]
-            cnd = row[1]
-            qty = row[2]
-            lvl = row[3]
-            avl = row[4]
-            self.assertRaises(DataValidationError, Inventory.validate_data, pid,cnd,qty,lvl,avl)
-            data = {
-                "product_id"    : pid,
-                "condition"     : cnd,
-                "quantity"      : qty,
-                "restock_level" : lvl,
-                "available"     : avl
-            }
-            inventory = Inventory()
-            inventory.deserialize(data)
-            self.assertNotEqual(inventory, None)
-            self.assertEqual(inventory.product_id, pid)
-            self.assertEqual(inventory.condition, cnd)
-            self.assertEqual(inventory.quantity, qty)
-            self.assertEqual(inventory.restock_level, lvl)
-            self.assertEqual(inventory.available, avl)
+        pid = 1234567
+        cnd = "new"
+        qty = 4
+        lvl = 3
+        avl = 1
+        data = {
+            "product_id"    : pid,
+            "condition"     : cnd,
+            "quantity"      : qty,
+            "restock_level" : lvl,
+            "available"     : avl
+        }
+        inventory = Inventory()
+        inventory.deserialize(data)
+        self.assertNotEqual(inventory, None)
+        self.assertEqual(inventory.product_id, pid)
+        self.assertEqual(inventory.condition, cnd)
+        self.assertEqual(inventory.quantity, qty)
+        self.assertEqual(inventory.restock_level, lvl)
+        self.assertEqual(inventory.available, avl)
 
-    def test_inventory_deserialize_bad_data(self):
+    def test_deserialize_bad_data(self):
         """ Test deserialization of bad data """
         data = "this is not a dictionary"
         inventory = Inventory()
         self.assertRaises(DataValidationError, inventory.deserialize, data)
 
+    def test_validate_data(self):
+        """ Testing validate_data_xxx """
+        pid = 1234567
+        cnd = "new"
+        qty = 4
+        lvl = 3
+        avl = 1
+        inventory = Inventory(product_id=pid, condition=cnd, quantity=qty, restock_level=lvl, available=avl)
+        self.assertTrue(inventory != None)
+        err_pid = inventory.validate_data_product_id()
+        self.assertEqual(err_pid,True)
+        err_cnd = inventory.validate_data_condition()
+        self.assertEqual(err_cnd,True)
+        err_qty = inventory.validate_data_quantity()
+        self.assertEqual(err_qty,True)
+        err_lvl = inventory.validate_data_restock_level()
+        self.assertEqual(err_lvl,True)
+        err_avl = inventory.validate_data_available()
+        self.assertEqual(err_avl,True)
+        err = inventory.validate_data()
+        self.assertEqual(err,True)
+
     ######################################################################
     ## Database
     ######################################################################
-    def test_inventory_create(self):
+    def test_create(self):
         """ Create a inventory and assert that it exists """
-        # pid,cnd,qty,lvl,avl = InventoryTest.get_data()
-        global test_data
-        global test_data_file
-        if test_data and len(test_data)==0:
-            test_data = InventoryTest.read_test_data(test_data_file)
-        for row in test_data:
-            if not row or len(row)<model.MAX_ATTR:
-                continue;
-            pid = row[0]
-            cnd = row[1]
-            qty = row[2]
-            lvl = row[3]
-            avl = row[4]
-            self.assertRaises(DataValidationError, Inventory.validate_data, pid,cnd,qty,lvl,avl)
-            inventory = Inventory(product_id=pid, condition=cnd, quantity=qty, restock_level=lvl, available=avl)
-            inventory.create()
-            self.assertTrue(inventory != None)
-            self.assertEqual(inventory.product_id, pid)
-            self.assertEqual(inventory.condition, cnd)
-            self.assertEqual(inventory.quantity, qty)
-            self.assertEqual(inventory.restock_level, lvl)
-            self.assertEqual(inventory.available, avl)
+        pid = 1234567
+        cnd = "new"
+        qty = 4
+        lvl = 3
+        avl = 1
+        inventory = Inventory(product_id=pid, condition=cnd, quantity=qty, restock_level=lvl, available=avl)
+        inventory.create()
+        # self.assertRaises(DataValidationError, inventory.validate_data)
+        self.assertTrue(inventory != None)
+        self.assertEqual(inventory.product_id, pid)
+        self.assertEqual(inventory.condition, cnd)
+        self.assertEqual(inventory.quantity, qty)
+        self.assertEqual(inventory.restock_level, lvl)
+        self.assertEqual(inventory.available, avl)
 
-    def test_inventory_update(self):
+    def test_update(self):
         """Update an Inventory"""
         inventory = Inventory(product_id=123456, condition="new", quantity=1, restock_level=10, available=1)
         inventory.create()
@@ -150,7 +147,7 @@ class InventoryTest(unittest.TestCase):
         self.assertEqual(len(inventories), 1)
         self.assertEqual(inventories[0].product_id, 1234567)
 
-    def test_inventory_delete(self):
+    def test_delete(self):
         """Delete an Inventory"""
         inventory = Inventory(product_id=123456, condition="new", quantity=1, restock_level=10, available=1)
         inventory.create()

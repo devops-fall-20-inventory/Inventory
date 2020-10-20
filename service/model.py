@@ -89,26 +89,26 @@ class Inventory(db.Model):
 
     ######################################################################
     # VALIDATING DATA FORMATS
-    def validate_data(pid, cnd, qty, lvl, avl):
+    def validate_data(self):
         args = []
 
-        err_pid = Inventory.validate_data_product_id(pid)
+        err_pid = self.validate_data_product_id()
         if not err_pid:
             args.append(ATTR_PRODUCT_ID)
 
-        err_cnd = Inventory.validate_data_condition(cnd)
+        err_cnd = self.validate_data_condition()
         if not err_cnd:
             args.append(ATTR_CONDITION)
 
-        err_qty = Inventory.validate_data_quantity(qty)
+        err_qty = self.validate_data_quantity()
         if not err_qty:
             args.append(ATTR_QUANTITY)
 
-        err_lvl = Inventory.validate_data_restock_level(lvl)
+        err_lvl = self.validate_data_restock_level()
         if not err_lvl:
             args.append(ATTR_RESTOCK_LEVEL)
 
-        err_avl = Inventory.validate_data_available(avl)
+        err_avl = self.validate_data_available()
         if not err_avl:
             args.append(ATTR_AVAILABLE)
 
@@ -118,27 +118,32 @@ class Inventory(db.Model):
         return True
 
     # Validating Product ID format
-    def validate_data_product_id(pid):
+    def validate_data_product_id(self):
+        pid = self.product_id
         return type(pid) is int and pid>0
 
     # validating Condition format
-    def validate_data_condition(cnd):
+    def validate_data_condition(self):
+        cnd = self.condition
         return type(cnd) is str and cnd.lower() in CONDITIONS
 
     # Validating Quantity format
-    def validate_data_quantity(qty):
+    def validate_data_quantity(self):
+        qty = self.quantity
         return type(qty) is int and qty>0 and qty<=QTY_HIGH
 
     # Validating Restock level format
-    def validate_data_restock_level(lvl):
+    def validate_data_restock_level(self):
+        lvl = self.restock_level
         return type(lvl) is int and lvl>0 and lvl<=RESTOCK_LVL
 
     # Validating Available format
-    def validate_data_available(avl):
+    def validate_data_available(self):
+        avl = self.available
         return type(avl) is type(AVAILABLE_TRUE) and avl in [AVAILABLE_TRUE,AVAILABLE_FALSE]
 
     ######################################################################
-    # * CREATE
+    # CREATE
     def create(self):
         """
         Creates an Inventory record to the database
@@ -148,7 +153,7 @@ class Inventory(db.Model):
         db.session.commit()
 
     ######################################################################
-    # UPDATE -
+    # UPDATE
     def update(self):
         """
         Updates an Inventory record to the database
@@ -157,7 +162,7 @@ class Inventory(db.Model):
         db.session.commit()
 
     ######################################################################
-    # DELETE -
+    # DELETE
     def delete(self):
         """ Removes an Inventory record from the data store """
         logger.info("Deleting %d", self.product_id)
@@ -165,28 +170,28 @@ class Inventory(db.Model):
         db.session.commit()
 
     ######################################################################
-    # READ -
+    # READ
     @classmethod
     def all(cls):
         """ Returns all of the Inventory records in the database """
         logger.info("Processing all Inventory records")
         return cls.query.all()
 
-    # -
+    #
     @classmethod
     def find(cls, pid, condition):
         """ Finds an Inventory record by its product_id and condition """
         logger.info("Processing lookup for product_id %d and condition %s ", pid, condition)
         return cls.query.get((pid, condition))
 
-    # -
+    #
     @classmethod
     def find_or_404(cls, pid, condition):
         """ Find an Inventory record by its product_id and condition """
         logger.info("Processing lookup or 404 for product_id %d and condition %s", pid, condition)
         return cls.query.get_or_404((pid, condition))
 
-    # -
+    #
     @classmethod
     def find_by_product_id(cls, product_id):
         """ Returns the Inventory record with the given product_id
