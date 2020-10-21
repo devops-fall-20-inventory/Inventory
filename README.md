@@ -61,11 +61,12 @@ FLASK_APP=service:app flask run -h 0.0.0.0
 Then you can test the application in the browser from you host machine, or you can use Postman for sending http requests. You can also type nosetests under /vagrant to check different test cases and the overall coverage.
     
     
-###Code Analysis Using Pylint
+### Code Analysis Using Pylint
 Code analysis settings are pre-configured to get code analysis for the code base just run the following commands once in /vagrant directory.
-
+```
 pylint service
 pylint tests
 
+```
     
 
