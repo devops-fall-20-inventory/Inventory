@@ -8,6 +8,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from werkzeug import test
+from werkzeug.wrappers import Response
 from flask_api import status  # HTTP Status Codes
 from service import app
 import service.service as service
@@ -142,6 +143,18 @@ class InventoryAPITest(TestCase):
         for inventory in data:
             self.assertEqual(inventory["product_id"], test_pid)
 
+    def test_get_inventory_by_pid_2(self):
+        """Get product details from inventory only by product_id"""
+        test_inventory = InventoryFactory()
+        resp = self.app.post(
+            "/inventory", json=test_inventory.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        new_inventory = resp.get_json()
+        pid = new_inventory["product_id"]
+        resp = self.app.get("/inventory/{}".format(pid+3), content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_update_inventory(self):
         """Update an existing product in  Inventory"""
         test_inventory = InventoryFactory()
@@ -161,6 +174,26 @@ class InventoryAPITest(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         updated_inventory = resp.get_json()
         self.assertEqual(updated_inventory["quantity"], 9999)
+
+    def test_update_inventory_2(self):
+        """Update an existing product in  Inventory"""
+        test_inventory = InventoryFactory()
+        resp = self.app.post(
+            "/inventory", json=test_inventory.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # update the pet
+        new_inventory = resp.get_json()
+        new_inventory["quantity"] = 9999
+        resp = self.app.put(
+            "/inventory/{}/{}".format(new_inventory["product_id"]+4, new_inventory["condition"]),
+            json=new_inventory,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+
 
     def test_update_stock_quantity(self):
         """Update stock quantity for a given product in Inventory"""
@@ -205,6 +238,50 @@ class InventoryAPITest(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         resp = self.app.put("/inventory/{}/{}/sub/{}".format(new_inventory["product_id"],new_inventory["condition"],new_inventory["quantity"]-8))
         self.assertEqual(resp.status_code, status.HTTP_200_OK)   
+
+    def test_update_stock_quantity_5(self):
+        """Update stock quantity for a given product in Inventory"""
+        test_inventory = InventoryFactory()
+        resp = self.app.post(
+            "/inventory", json=test_inventory.serialize(), content_type="application/json"
+        )
+        new_inventory = resp.get_json()
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        resp = self.app.put("/inventory/{}/{}/sub/0".format(new_inventory["product_id"],new_inventory["condition"]))
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)   
+
+    def test_update_stock_quantity_6(self):
+        """Update stock quantity for a given product in Inventory"""
+        test_inventory = InventoryFactory()
+        resp = self.app.post(
+            "/inventory", json=test_inventory.serialize(), content_type="application/json"
+        )
+        new_inventory = resp.get_json()
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        resp = self.app.put("/inventory/{}/{}/sub/0".format(new_inventory["product_id"],new_inventory["condition"]))
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST) 
+
+    def test_update_stock_quantity_7(self):
+        """Update stock quantity for a given product in Inventory"""
+        test_inventory = InventoryFactory()
+        resp = self.app.post(
+            "/inventory", json=test_inventory.serialize(), content_type="application/json"
+        )
+        new_inventory = resp.get_json()
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        resp = self.app.put("/inventory/{}/{}/subh/5".format(new_inventory["product_id"],new_inventory["condition"]))
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST) 
+
+    def test_update_stock_quantity_8(self):
+        """Update stock quantity for a given product in Inventory"""
+        test_inventory = InventoryFactory()
+        resp = self.app.post(
+            "/inventory", json=test_inventory.serialize(), content_type="application/json"
+        )
+        new_inventory = resp.get_json()
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        resp = self.app.put("/inventory/{}/{}/add/5".format(new_inventory["product_id"]+4,new_inventory["condition"]))
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND) 
 
     def test_delete_inventory(self):
         """Delete a product from the inventory"""
