@@ -195,7 +195,7 @@ class InventoryAPITest(TestCase):
 
 
 
-    @patch('service.service.create_orders')
+    @patch('service.service.create_inventory')
     def test_bad_request(self, bad_request_mock):
         """ Bad Request error from Create Inventory """
         bad_request_mock.side_effect = DataValidationError()
