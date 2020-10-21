@@ -50,15 +50,15 @@ The inventory resource keeps track of how many of each product we have in our wa
           "available":1
         }
 ### Test and Running
-   To run and test the code, you can use the following command:
-	vagrant up
-        vagrant ssh
-        cd /vagrant
-        FLASK_APP=service:app flask run -h 0.0.0.0
-   Then you can test the application in the browser from you host machine, or
-   you can use Postman for sending http requests.
 
-   You can also type nosetests under /vagrant to check different test cases and the overall coverage.
+To run and test the code, you can use the following command:
+```
+vagrant up
+vagrant ssh
+cd /vagrant
+FLASK_APP=service:app flask run -h 0.0.0.0
+```
+Then you can test the application in the browser from you host machine, or you can use Postman for sending http requests. You can also type nosetests under /vagrant to check different test cases and the overall coverage.
     
     
 
