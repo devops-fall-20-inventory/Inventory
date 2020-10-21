@@ -253,6 +253,9 @@ def update_stock(product_id, condition, operation, amount):
         if inventory.quantity < 0:
             return forbidden("Unable to perform operation. Current stock level is lesser than specified subtract amount. Stock quantity can't become negative")
         msg_tmp = "Removed "
+
+    if inventory.quantity==0:
+        inventory.available=0
         
     inventory.update()
     app.logger.info(msg_tmp+"%d items having product_id %d and condition %s.", amount, product_id, condition)
