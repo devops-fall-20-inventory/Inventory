@@ -194,7 +194,7 @@ class InventoryAPITest(TestCase):
         self.assertEqual(final_inventory["available"], 0, "The available parameter is not what was expected")
 
 
-    @patch(‘service.service.create_inventory’)
+        @patch(‘service.service.create_inventory’)
     def test_bad_request(self, bad_request_mock):
         “”" Bad Request error from Create Inventory “”"
         bad_request_mock.side_effect = DataValidationError()
