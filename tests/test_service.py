@@ -239,7 +239,12 @@ class InventoryAPITest(TestCase):
         final_inventory = resp.get_json()
         self.assertEqual(final_inventory["available"], 0, "The available parameter is not what was expected")
 
-
+        
+    def test_wrong_content_type(self):
+        """trigger wrong content type error"""
+        test_inventory = InventoryFactory()
+        resp = self.app.post("/inventory", json=test_inventory.serialize(), content_type="text")
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     @patch('service.service.create_inventory')
     def test_bad_request(self, bad_request_mock):
