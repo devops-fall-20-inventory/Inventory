@@ -60,7 +60,7 @@ def not_found(error):
 
 @app.errorhandler(status.HTTP_403_FORBIDDEN)
 def forbidden(error):
-    """ Handles resources that cant be modified 403 FORBIDDEN . Eg : stock level less than 0 changes """
+    """ Handles resources that cant be modified with 403 FORBIDDEN . Eg : changes that result in stock level to be less than zero """
     message = str(error)
     app.logger.warning(message)
     return (
