@@ -17,9 +17,6 @@ from .inventory_factory import InventoryFactory
 
 DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres")
 
-######################################################################
-#  T E S T   C A S E S
-######################################################################
 class InventoryAPITest(TestCase):
     """ Inventory Services Tests """
 
@@ -90,11 +87,16 @@ class InventoryAPITest(TestCase):
         # Check the data is correct
         new_inventory = resp.get_json()
         self.assertTrue(new_inventory != None)
-        self.assertEqual(new_inventory["product_id"], test_inventory.serialize()['product_id'], "Product ID does not match")
-        self.assertEqual(new_inventory["quantity"], test_inventory.serialize()['quantity'], "Quantity does not match")
-        self.assertEqual(new_inventory["restock_level"], test_inventory.serialize()['restock_level'], "Restock level does not match")
-        self.assertEqual(new_inventory["available"], test_inventory.serialize()['available'], "Availability does not match")
-        self.assertEqual(new_inventory["condition"], test_inventory.serialize()['condition'], "Conditions do not match")
+        self.assertEqual(new_inventory["product_id"],
+            test_inventory.serialize()['product_id'], "Product ID does not match")
+        self.assertEqual(new_inventory["quantity"],
+            test_inventory.serialize()['quantity'], "Quantity does not match")
+        self.assertEqual(new_inventory["restock_level"],
+            test_inventory.serialize()['restock_level'], "Restock level does not match")
+        self.assertEqual(new_inventory["available"],
+            test_inventory.serialize()['available'], "Availability does not match")
+        self.assertEqual(new_inventory["condition"],
+            test_inventory.serialize()['condition'], "Conditions do not match")
 
         # Check that the location header was correct
         resp = self.APP.get(location, content_type="application/json")
@@ -110,23 +112,12 @@ class InventoryAPITest(TestCase):
     ##################################################################
     # Testing GET
     def test_list_inventory(self):
-        """Get a list of products in inventory"""
+        """Get the entire inventory list"""
         self._create_inventories(5)
         resp = self.APP.get("/inventory")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(len(data), 5)
-
-    def test_get_inventory(self):
-        """Get a single product by id , condition"""
-        test_inventory = self._create_inventories(1)[0]
-        resp = self.APP.get(
-            "/inventory/{}/{}".format(test_inventory.product_id, test_inventory.condition), content_type="application/json"
-        )
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(data["product_id"], test_inventory.product_id)
-        self.assertEqual(data["condition"],test_inventory.condition)
 
     def test_get_inventory_not_found(self):
         """Get a product inventory that's not available"""
@@ -134,7 +125,7 @@ class InventoryAPITest(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_inventory_by_pid(self):
-        """Get product details from inventory only by product_id"""
+        """Get inventory details ONLY by product_id"""
         inventories = self._create_inventories(10)
         test_pid = inventories[0].product_id
         pid_inventories = [inventory for inventory in inventories if inventory.product_id == test_pid]
@@ -146,16 +137,29 @@ class InventoryAPITest(TestCase):
             self.assertEqual(inventory["product_id"], test_pid)
 
     def test_get_inventory_by_pid_2(self):
-        """Get product details from inventory only by product_id"""
-        test_inventory = InventoryFactory()
-        resp = self.APP.post(
-            "/inventory", json=test_inventory.serialize(), content_type="application/json"
-        )
-        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-        new_inventory = resp.get_json()
-        pid = new_inventory["product_id"]
+        """Get inventory details ONLY by product_id"""
+        test_inventory = self._create_inventories(1)[0]
+        # resp = self.APP.post(
+        #     "/inventory", json=test_inventory.serialize(), content_type="application/json"
+        # )
+        # self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        # new_inventory = resp.get_json()
+        pid = test_inventory["product_id"]
         resp = self.APP.get("/inventory/{}".format(pid+3), content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_inventory_by_pid_condition(self):
+        """Get a single inventory by {product_id, condition}"""
+        test_inventory = self._create_inventories(1)[0]
+        resp = self.APP.get(
+            "/inventory/{}/condition/{}".format(
+            test_inventory.product_id, test_inventory.condition),
+            content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["product_id"], test_inventory.product_id)
+        self.assertEqual(data["condition"], test_inventory.condition)
 
     ##################################################################
     # Testing PUT

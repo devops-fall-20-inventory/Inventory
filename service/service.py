@@ -28,6 +28,7 @@ from service.model import Inventory, DataValidationError
 from . import APP
 
 DEMO_MSG = "Inventory Demo REST API Service"
+PERMISSION = False
 
 ################################################################################
 # Error Handlers
@@ -115,7 +116,7 @@ def internal_server_error(error):
     )
 
 ################################################################################
-# GET INDEX
+# INDEX
 ################################################################################
 @APP.route("/")
 def index():
@@ -131,55 +132,74 @@ def index():
     )
 
 ################################################################################
-# LIST ALL RECORDS
+# GET
 ################################################################################
+def get_permitted_records(inventories):
+    """
+    When a CUSTOMER uses GET then ONLY return matching items for which available==1
+    When the ADMIN uses GET then return ALL items even items with available==0
+    """
+    results = []
+    for inv in inventories:
+        json = inventory.serialize()
+        if not PERMISSION:
+            if json.available==1:
+                results.append(json)
+        else:
+            results.append(json)
+    return results
+
 @APP.route("/inventory", methods=["GET"])
 def list_inventories():
-    """Returns a list of all inventories in the inventory"""
-    APP.logger.info("Request for all inventories")
+    """
+    Returns a list of all inventories in the inventory
+    GET /inventory
+    """
+    APP.logger.info("A GET request for ALL inventories")
     inventories = Inventory.all()
-    results = [inventory.serialize() for inventory in inventories]
-
-    APP.logger.info("Returning %d inventories", len(results))
+    results = get_permitted_records(inventories)
+    if len(results) == 0:
+        raise NotFound("Inventories were not found for this permission")
+    APP.logger.info("Returning %d inventories for this permission type", len(results))
     return make_response(jsonify(results), status.HTTP_200_OK)
 
-################################################################################
-# RETRIEVE A RECORD
-################################################################################
-@APP.route("/inventory/<int:product_id>/<string:condition>", methods=["GET"])
-def get_inventory(product_id, condition):
-    """Returns the inventory with the given product_id and condition"""
-    APP.logger.info("Please include product_id %d and condition %s in req", product_id, condition)
-    inventory = Inventory.find(product_id, condition)
-    if not inventory:
-        raise NotFound("Inventory with ({}, {}) was not found".format(product_id, condition))
-
-    APP.logger.info("Return inventory with product_id %d and condition %s", product_id, condition)
-    return make_response(jsonify(inventory.serialize()), status.HTTP_200_OK)
-
-################################################################################
-# RETRIEVE RECORDS OF A PRODUCT ID
-################################################################################
 @APP.route("/inventory/<int:product_id>", methods=["GET"])
 def get_inventory_by_pid(product_id):
-    """Returns the inventories with the given product_id"""
-    APP.logger.info("Request for inventories with product_id %d", product_id)
+    """
+    Returns the inventories with the given product_id
+    GET /inventory/<int:product_id>
+    """
+    APP.logger.info("A GET request for inventories with product_id {}".format(product_id))
     inventories = Inventory.find_by_product_id(product_id)
-    results = [inventory.serialize() for inventory in inventories]
+    results = get_permitted_records(inventories)
     if len(results) == 0:
         raise NotFound("Inventories with product_id {} were not found".format(product_id))
-
     APP.logger.info("Return %d inventories with product_id: %d", len(results), product_id)
     return make_response(jsonify(results), status.HTTP_200_OK)
 
+@APP.route("/inventory/<int:product_id>/condition/<string:condition>", methods=["GET"])
+def get_inventory_by_pid_condition(product_id, condition):
+    """
+    Returns the inventory with the given product_id and condition
+    GET /inventory/<int:product_id>/condition/<string:condition>
+    """
+    APP.logger.info("A GET request for inventories with product_id {} and condition {}"\
+                    .format(product_id),ocndition)
+    inventory = Inventory.find(product_id, condition)
+    results = get_permitted_records(inventory)
+    if len(results) == 0:
+        raise NotFound("Inventory with ({}, {}) was not found".format(product_id, condition))
+    APP.logger.info("Return inventory with product_id %d and condition %s", product_id, condition)
+    return make_response(jsonify(results), status.HTTP_200_OK)
+
 ################################################################################
-# CREATE A NEW RECORD
+# POST
 ################################################################################
 @APP.route("/inventory", methods=["POST"])
 def create_inventory():
     """
-    Creates a new inventory in the Inventory DB
-    Based the data in the body that is posted
+    Creates a new inventory in the Inventory DB based the data in the body
+    POST /inventory
     """
     APP.logger.info("Request to create an Inventory record")
     check_content_type("application/json")
@@ -189,15 +209,13 @@ def create_inventory():
     message = inventory.serialize()
     location_url = url_for("get_inventory", product_id=inventory.product_id,\
                             condition=inventory.condition, _external=True)
-
     APP.logger.info("Inventory with Product ID [%d] created.", inventory.product_id)
     return make_response(
         jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
     )
 
-
 ################################################################################
-# UPDATE AN EXISTING RECORD
+# PUT
 ################################################################################
 @APP.route("/inventory/<int:product_id>/<string:condition>", methods=["PUT"])
 def update_inventory(product_id, condition):
