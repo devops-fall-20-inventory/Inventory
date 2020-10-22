@@ -233,28 +233,28 @@ def delete_inventory(product_id, condition):
 # UPDATE AN EXISTING PRODUCT's QUANTITY
 ################################################################################
 # @APP.route("/inventory/<int:product_id>/<string:condition>/<string:operation>/<int:amount>",
-            # methods=["PUT"])
+#             methods=["PUT"])
 # def update_stock(product_id, condition, operation, amount):
 #     """Updates the inventory with the given product_id and condition"""
 #     APP.logger.info("Request to update quantity of product in inventory\
-                        # with product_id %d and condition %s", product_id, condition)
-#
-#
+#                         with product_id %d and condition %s", product_id, condition)
+
+
 #     if amount == 0:
 #         return bad_request("Wrong update amount parameter specified.\
-            # Amount can only be a non zero whole number Eg : /inventory/123/new/add/1")
-#
+#             Amount can only be a non zero whole number Eg : /inventory/123/new/add/1")
+
 #     if operation != "add" and operation != "sub":
 #         return bad_request("Wrong operation specified.\
-            # Operation can only be add or sub in http request. Eg : /inventory/123/new/add/1")
-#
+#             Operation can only be add or sub in http request. Eg : /inventory/123/new/add/1")
+
 #     inventory = Inventory.find(product_id, condition)
 #     if not inventory:
 #         raise NotFound("Inventory with product_id {} and condition {} was not found."\
-                            # .format(product_id, condition))
-#
+#                             .format(product_id, condition))
+
 #     msg_tmp = " "
-#
+
 #     if operation == "add":
 #         inventory.quantity = inventory.quantity + amount
 #         msg_tmp = "Added "
@@ -262,40 +262,39 @@ def delete_inventory(product_id, condition):
 #         inventory.quantity = inventory.quantity - amount
 #         if inventory.quantity < 0:
 #             return forbidden("Unable to perform operation. Current stock level is lesser\
-            # than specified subtract amount. Stock quantity can't become negative")
+#             than specified subtract amount. Stock quantity can't become negative")
 #         msg_tmp = "Removed "
-#
+
 #     if inventory.quantity==0:
 #         inventory.available=0
-#
+
 #     inventory.update()
 #     APP.logger.info(msg_tmp+"%d items having product_id %d and condition %s.",\
-                    # amount, product_id, condition)
+#                     amount, product_id, condition)
 #     return make_response(jsonify(inventory.serialize()), status.HTTP_200_OK)
 
-################################################################################
-# UPDATE AN EXISTING PRODUCT'S AVAILABILITY
-################################################################################
+# ################################################################################
+# # UPDATE AN EXISTING PRODUCT'S AVAILABILITY
+# ################################################################################
 # @APP.route("/inventory/<int:product_id>/<string:condition>/<int:available>", methods=["PUT"])
 # def update_availablility(product_id, condition, available):
 #     """Updates the available attribute for the given product_id and condition"""
 #     APP.logger.info("Sent request to update availability for the product ID %d\
-                    # and condition %s", product_id, condition)
-#
-#     if available != 0 or available!=1:
+#     # and condition %s", product_id, condition)
+
+#     if available != 0 and available!=1:
 #         return bad_request("Incorrect value for available, can only accept 0 or 1")
-#
+
 #     prod = Inventory.find(product_id, condition)
 #     if not prod:
 #         raise NotFound("The product ID, condition pair does not exist.")
-#
+
 #     if prod.quantity==0 and available==1:
 #         return forbidden("This product is currently out of stock and cannot be made available")
-#
+
 #     prod.available = available
 #     prod.update()
-#
-#
+
 #     if prod.available==1:
 #         APP.logger.info("The product with ID %d that satisfies \
 # the condition %s is now available.", product_id, condition)
