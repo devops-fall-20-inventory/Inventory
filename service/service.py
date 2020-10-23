@@ -5,26 +5,26 @@ Paths:
 
 ------
 
-GET /inventory
+1. GET /inventory
     - Returns a list of all inventories in the inventory
-GET /inventory/<int:product_id>
+2. GET /inventory?product_id=<int>
     - Returns the inventory record with the given product_id
-GET /inventory/<int:product_id>/condition/<string:condition>
+3. GET /inventory/<int:product_id>/condition/<string:condition>
     - Returns the inventory record with the given product_id and condition
 
-POST /inventory
-    - Creates a new inventory record in the inventory
+4. POST /inventory
+    - Given the data body this creates an inventory record in the DB
 
-PUT /inventory/<int:product_id>/condition/<string:condition>
+5. PUT /inventory/<int:product_id>/condition/<string:condition>
     - Updates the inventory record with the given product_id and condition
-PUT /inventory/<int:product_id>/condition/<string:condition>/activate
+6. PUT /inventory/<int:product_id>/condition/<string:condition>/activate
     - Given the product_id and condition this updates available = 1
-PUT /inventory/<int:product_id>/condition/<string:condition>/deactivate
+7. PUT /inventory/<int:product_id>/condition/<string:condition>/deactivate
     - Given the product_id and condition this updates available = 0
-PUT /inventory/<int:product_id>/condition/<string:condition>/restock
+8. PUT /inventory/<int:product_id>/condition/<string:condition>/restock
     - Given the product_id, condition and amount (body) this updates quantity += amount
 
-DELETE /inventory/<int:product_id>/condition/<string:condition>
+9. DELETE /inventory/<int:product_id>/condition/<string:condition>
     - Given the product_id and condition this updates available = 0
 """
 
@@ -130,6 +130,20 @@ def internal_server_error(error):
         status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
 
+@APP.errorhandler(status.HTTP_409_CONFLICT)
+def create_conflict_error(error):
+    """ Handles CREATE conflicts error with HTTP_409_CONFLICT """
+    message = str(error)
+    APP.logger.error(message)
+    return (
+        jsonify(
+            status=status.HTTP_409_CONFLICT,
+            error="Conflict 409 Error",
+            message=message,
+        ),
+        status.HTTP_409_CONFLICT,
+    )
+
 ################################################################################
 # INDEX
 ################################################################################
@@ -156,43 +170,26 @@ def list_inventories():
     GET /inventory
     """
     APP.logger.info("A GET request for ALL inventories")
-    inventories = Inventory.all()
+    inventories = []
+    params = request.args
+    if len(params) > 0:
+        pid = params.get("product_id")
+        if pid:
+            inventories = Inventory.find_by_product_id(pid)
+        else:
+            return method_not_supported("Invalid request parameters: missing (product_id)")
+    else:
+        inventories = Inventory.all()
 
     results = []
     for inv in inventories:
         json = inv.serialize()
-        if PERMISSION:
+        if json['available'] == 1:
             results.append(json)
-        else:
-            if json['available'] == 1:
-                results.append(json)
 
     if len(results) == 0:
         return not_found("Inventories were not found for this permission")
     APP.logger.info("Returning {} inventories for this permission type".format(len(results)))
-    return make_response(jsonify(results), status.HTTP_200_OK)
-
-@APP.route("/inventory/<int:product_id>", methods=["GET"])
-def get_inventory_by_pid(product_id):
-    """
-    Returns the inventories with the given product_id
-    GET /inventory/<int:product_id>
-    """
-    APP.logger.info("A GET request for inventories with product_id {}".format(product_id))
-    inventories = Inventory.find_by_product_id(product_id)
-
-    results = []
-    for inv in inventories:
-        json = inv.serialize()
-        if PERMISSION:
-            results.append(json)
-        else:
-            if json['available'] == 1:
-                results.append(json)
-
-    if len(results) == 0:
-        return not_found("Inventories with Product ID ({})".format(product_id))
-    APP.logger.info("Return {} inventories with product_id: {}".format(len(results), product_id))
     return make_response(jsonify(results), status.HTTP_200_OK)
 
 @APP.route("/inventory/<int:product_id>/condition/<string:condition>", methods=["GET"])
@@ -229,17 +226,8 @@ def create_inventory():
     inventory.deserialize(json)
     inventory.validate_data()
 
-    inv_old = Inventory.find(json['product_id'], json['condition'])
-    if inv_old:
-        inv_old.quantity += inventory.quantity
-        if inv_old.quantity > 0:
-            inv_old.available = 1
-        inv_old.update()
-        location_url = url_for("get_inventory_by_pid_condition",\
-            product_id=inv_old.product_id, condition=inv_old.condition, _external=True)
-        return make_response(
-            jsonify(inv_old.serialize()), status.HTTP_201_CREATED, {"Location": location_url}
-        )
+    if Inventory.find(json['product_id'], json['condition']):
+        return create_conflict_error("The Record you're trying to create already exists!")
     else:
         inventory.create()
         location_url = url_for("get_inventory_by_pid_condition",\
@@ -262,13 +250,7 @@ def delete_inventory(product_id, condition):
                     .format(product_id, condition))
     inventory = Inventory.find(product_id, condition)
     if inventory:
-        if inventory.available != 0:
-            if inventory.quantity > 0:
-                inventory.quantity -= 1
-            if inventory.quantity == 0:
-                inventory.available = 0
-        inventory.update()
-        # inventory.delete()
+        inventory.delete()
     APP.logger.info("Inventory with product_id {} and condition {} deleted"
                     .format(product_id, condition))
     return make_response("", status.HTTP_204_NO_CONTENT)

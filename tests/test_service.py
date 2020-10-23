@@ -57,6 +57,32 @@ class InventoryAPITest(TestCase):
     def test_500(self):
         service.internal_server_error("Testing")
 
+    def test_409(self):
+        service.create_conflict_error("Testing")
+
+    def test_wrong_content_type(self):
+        """trigger wrong content type error"""
+        set_permissions(BASE)
+        test_inventory = InventoryFactory()
+        resp = self.APP.post("/inventory", json=test_inventory.serialize(), content_type="text")
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    @patch('service.service.create_inventory')
+    def test_bad_request(self, bad_request_mock):
+        """ Bad Request error from Create Inventory """
+        bad_request_mock.side_effect = DataValidationError()
+        resp = self.APP.post('/inventory', json="",
+                             content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch('service.service.create_inventory')
+    def create_conflict_error(self, conflict_mock):
+        """ Conflict Error from Create Inventory """
+        conflict_mock.side_effect = DataValidationError()
+        resp = self.APP.post('/inventory', json="",
+                             content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_index(self):
         """ Test the Home Page """
         resp = self.APP.get("/")
@@ -160,13 +186,10 @@ class InventoryAPITest(TestCase):
             "/inventory", json=json, content_type="application/json"
         )
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-        qty1 = resp.get_json()['quantity']
         resp = self.APP.post(
             "/inventory", json=json, content_type="application/json"
         )
-        qty2 = resp.get_json()['quantity']
-        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(qty2 == qty1 + qty1)
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
 
     ##################################################################
     # Testing GET
@@ -191,7 +214,7 @@ class InventoryAPITest(TestCase):
 
     def test_get_inventory_not_found(self):
         """Get a product inventory that's not available"""
-        resp = self.APP.get("/inventory/0")
+        resp = self.APP.get("/inventory?product_id=0")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_inventory_by_pid(self):
@@ -203,8 +226,8 @@ class InventoryAPITest(TestCase):
             test_pid = inv.product_id
             for p in PERMS:
                 set_permissions(p)
-                resp = self.APP.get("/inventory/{}".format(test_pid), content_type="application/json")
-                if p or inv.available == 1:
+                resp = self.APP.get("/inventory?product_id={}".format(test_pid), content_type="application/json")
+                if inv.available == 1:
                     self.assertEqual(resp.status_code, status.HTTP_200_OK)
                 else:
                     self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
@@ -216,7 +239,7 @@ class InventoryAPITest(TestCase):
         pid = test_inventory.product_id
         for p in PERMS:
             set_permissions(p)
-            resp = self.APP.get("/inventory/{}".format(pid+3), content_type="application/json")
+            resp = self.APP.get("/inventory?product_id={}".format(pid+3), content_type="application/json")
             self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_inventory_by_pid_condition(self):
@@ -254,15 +277,6 @@ class InventoryAPITest(TestCase):
             )
             if p:
                 self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
-                self.assertEqual(len(resp.data), 0)
-                # make sure they are deleted
-                resp = self.APP.get(
-                    "/inventory/{}/condition/{}".format(test_inventory.product_id, test_inventory.condition), content_type="application/json"
-                )
-                if not service.PERMISSION:
-                    self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-                else:
-                    self.assertEqual(resp.status_code, status.HTTP_200_OK)
             else:
                 self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -421,19 +435,3 @@ class InventoryAPITest(TestCase):
                 "/inventory/{}/condition/{}/deactivate".format(pid, cnd),
             )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-
-    ##################################################################
-    def test_wrong_content_type(self):
-        """trigger wrong content type error"""
-        set_permissions(BASE)
-        test_inventory = InventoryFactory()
-        resp = self.APP.post("/inventory", json=test_inventory.serialize(), content_type="text")
-        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-
-    @patch('service.service.create_inventory')
-    def test_bad_request(self, bad_request_mock):
-        """ Bad Request error from Create Inventory """
-        bad_request_mock.side_effect = DataValidationError()
-        resp = self.APP.post('/inventory', json="",
-                             content_type='application/json')
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
