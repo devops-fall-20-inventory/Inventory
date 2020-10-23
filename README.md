@@ -5,6 +5,10 @@ This repository contains all the work of the Inventory Squad as part of the Fall
 
 The inventory resource keeps track of how many of each product we have in our warehouse. At a minimum it will reference a product and the quantity on hand. Inventory also tracks restock levels and the condition of the item (i.e., new, open box, used). Restock levels will help you know when to order more products. Being able to query products by their condition (e.g., new, used) is very useful.
 
+## Inventory Travis CI
+
+[![Build Status](https://travis-ci.org/devops-fall-20-inventory/inventories.svg?branch=master)](https://travis-ci.org/devops-fall-20-inventory/inventories)
+
 ## Squad
 
 1. [Arahant Ashok Kumar](https://github.com/arahant) - Product Owner
