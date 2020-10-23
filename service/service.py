@@ -5,13 +5,27 @@ Paths:
 
 ------
 
-GET /inventory - Returns a list of all inventories in the inventory
-GET /inventory/{product_id} - Returns the inventory record with the given product_id
-POST /inventory - Creates a new inventory record in the inventory
-PUT /inventory/{product_id} - Updates the inventory record with the given product_id
-PUT /inventory/{product_id}/{operation}/{amount}
-    - Updates quantity for a given product_id by adding or subtracting amount.
-DELETE /inventory/{product_id} - Deletes an inventory record with the given product_id
+GET /inventory
+    - Returns a list of all inventories in the inventory
+GET /inventory/<int:product_id>
+    - Returns the inventory record with the given product_id
+GET /inventory/<int:product_id>/condition/<string:condition>
+    - Returns the inventory record with the given product_id and condition
+
+POST /inventory
+    - Creates a new inventory record in the inventory
+
+PUT /inventory/<int:product_id>/condition/<string:condition>
+    - Updates the inventory record with the given product_id and condition
+PUT /inventory/<int:product_id>/condition/<string:condition>/activate
+    - Given the product_id and condition this updates available = 1
+PUT /inventory/<int:product_id>/condition/<string:condition>/deactivate
+    - Given the product_id and condition this updates available = 0
+PUT /inventory/<int:product_id>/condition/<string:condition>/restock
+    - Given the product_id, condition and amount (body) this updates quantity += amount
+
+DELETE /inventory/<int:product_id>/condition/<string:condition>
+    - Given the product_id and condition this updates available = 0
 """
 
 # import os
@@ -19,16 +33,17 @@ DELETE /inventory/{product_id} - Deletes an inventory record with the given prod
 # import logging
 from flask import jsonify, request, url_for, make_response, abort
 from flask_api import status  # HTTP Status Codes
-from werkzeug.exceptions import NotFound
+# from werkzeug.exceptions import NotFound
 # from werkzeug.exceptions import BadRequest
 # from flask_sqlalchemy import SQLAlchemy
+# import service.model as model
 from service.model import Inventory, DataValidationError
 
 # Import Flask application
 from . import APP
 
 DEMO_MSG = "Inventory Demo REST API Service"
-PERMISSION = False
+PERMISSION = True
 
 ################################################################################
 # Error Handlers
@@ -134,21 +149,6 @@ def index():
 ################################################################################
 # GET
 ################################################################################
-def get_permitted_records(inventories):
-    """
-    When a CUSTOMER uses GET then ONLY return matching items for which available==1
-    When the ADMIN uses GET then return ALL items even items with available==0
-    """
-    results = []
-    for inv in inventories:
-        json = inventory.serialize()
-        if not PERMISSION:
-            if json.available==1:
-                results.append(json)
-        else:
-            results.append(json)
-    return results
-
 @APP.route("/inventory", methods=["GET"])
 def list_inventories():
     """
@@ -157,10 +157,19 @@ def list_inventories():
     """
     APP.logger.info("A GET request for ALL inventories")
     inventories = Inventory.all()
-    results = get_permitted_records(inventories)
+
+    results = []
+    for inv in inventories:
+        json = inv.serialize()
+        if PERMISSION:
+            results.append(json)
+        else:
+            if json['available'] == 1:
+                results.append(json)
+
     if len(results) == 0:
-        raise NotFound("Inventories were not found for this permission")
-    APP.logger.info("Returning %d inventories for this permission type", len(results))
+        return not_found("Inventories were not found for this permission")
+    APP.logger.info("Returning {} inventories for this permission type".format(len(results)))
     return make_response(jsonify(results), status.HTTP_200_OK)
 
 @APP.route("/inventory/<int:product_id>", methods=["GET"])
@@ -171,10 +180,19 @@ def get_inventory_by_pid(product_id):
     """
     APP.logger.info("A GET request for inventories with product_id {}".format(product_id))
     inventories = Inventory.find_by_product_id(product_id)
-    results = get_permitted_records(inventories)
+
+    results = []
+    for inv in inventories:
+        json = inv.serialize()
+        if PERMISSION:
+            results.append(json)
+        else:
+            if json['available'] == 1:
+                results.append(json)
+
     if len(results) == 0:
-        raise NotFound("Inventories with product_id {} were not found".format(product_id))
-    APP.logger.info("Return %d inventories with product_id: %d", len(results), product_id)
+        return not_found("Inventories with Product ID ({})".format(product_id))
+    APP.logger.info("Return {} inventories with product_id: {}".format(len(results), product_id))
     return make_response(jsonify(results), status.HTTP_200_OK)
 
 @APP.route("/inventory/<int:product_id>/condition/<string:condition>", methods=["GET"])
@@ -184,13 +202,14 @@ def get_inventory_by_pid_condition(product_id, condition):
     GET /inventory/<int:product_id>/condition/<string:condition>
     """
     APP.logger.info("A GET request for inventories with product_id {} and condition {}"\
-                    .format(product_id),ocndition)
+                    .format(product_id, condition))
     inventory = Inventory.find(product_id, condition)
-    results = get_permitted_records(inventory)
-    if len(results) == 0:
-        raise NotFound("Inventory with ({}, {}) was not found".format(product_id, condition))
-    APP.logger.info("Return inventory with product_id %d and condition %s", product_id, condition)
-    return make_response(jsonify(results), status.HTTP_200_OK)
+    if (not inventory) or\
+        (inventory and PERMISSION is False and inventory.serialize()['available'] == 0):
+        return not_found("Inventory ({}, {})".format(product_id, condition))
+    APP.logger.info("Return inventory with product_id {} and condition {}"\
+                    .format(product_id, condition))
+    return make_response(jsonify([inventory.serialize()]), status.HTTP_200_OK)
 
 ################################################################################
 # POST
@@ -203,124 +222,153 @@ def create_inventory():
     """
     APP.logger.info("Request to create an Inventory record")
     check_content_type("application/json")
+    if not PERMISSION:
+        return bad_request("You do not have permissions to CREATE")
+    json = request.get_json()
     inventory = Inventory()
-    inventory.deserialize(request.get_json())
-    inventory.create()
-    message = inventory.serialize()
-    location_url = url_for("get_inventory", product_id=inventory.product_id,\
-                            condition=inventory.condition, _external=True)
-    APP.logger.info("Inventory with Product ID [%d] created.", inventory.product_id)
-    return make_response(
-        jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
-    )
+    inventory.deserialize(json)
+    inventory.validate_data()
+
+    inv_old = Inventory.find(json['product_id'], json['condition'])
+    if inv_old:
+        inv_old.quantity += inventory.quantity
+        if inv_old.quantity > 0:
+            inv_old.available = 1
+        inv_old.update()
+        location_url = url_for("get_inventory_by_pid_condition",\
+            product_id=inv_old.product_id, condition=inv_old.condition, _external=True)
+        return make_response(
+            jsonify(inv_old.serialize()), status.HTTP_201_CREATED, {"Location": location_url}
+        )
+    else:
+        inventory.create()
+        location_url = url_for("get_inventory_by_pid_condition",\
+            product_id=inventory.product_id, condition=inventory.condition, _external=True)
+        APP.logger.info("Inventory ({}, {}) created."\
+                        .format(inventory.product_id, inventory.condition))
+        return make_response(
+            jsonify(inventory.serialize()), status.HTTP_201_CREATED, {"Location": location_url}
+        )
+
+################################################################################
+# DELETE
+################################################################################
+@APP.route("/inventory/<int:product_id>/condition/<string:condition>", methods=["DELETE"])
+def delete_inventory(product_id, condition):
+    """Deletes an inventory with the given product_id and condition"""
+    if not PERMISSION:
+        return bad_request("You do not have permissions to DELETE")
+    APP.logger.info("Request to delete inventory with key ({}, {})"\
+                    .format(product_id, condition))
+    inventory = Inventory.find(product_id, condition)
+    if inventory:
+        if inventory.available != 0:
+            if inventory.quantity > 0:
+                inventory.quantity -= 1
+            if inventory.quantity == 0:
+                inventory.available = 0
+        inventory.update()
+        # inventory.delete()
+    APP.logger.info("Inventory with product_id {} and condition {} deleted"
+                    .format(product_id, condition))
+    return make_response("", status.HTTP_204_NO_CONTENT)
 
 ################################################################################
 # PUT
 ################################################################################
-@APP.route("/inventory/<int:product_id>/<string:condition>", methods=["PUT"])
+@APP.route("/inventory/<int:product_id>/condition/<string:condition>", methods=["PUT"])
 def update_inventory(product_id, condition):
-    """Updates the inventory with the given product_id and condition"""
-    APP.logger.info("Request to update inventory with key {%d, %s}", product_id, condition)
+    """
+    Regular Update
+    Updates the inventory with the given product_id and condition
+    """
+    if not PERMISSION:
+        return bad_request("You do not have permissions to UPDATE")
+    APP.logger.info("Request to update inventory with key ({}, {})"\
+                    .format(product_id, condition))
     check_content_type("application/json")
     inventory = Inventory.find(product_id, condition)
     if not inventory:
-        raise NotFound("Inventory with ({}, {}) was not found".format(product_id, condition))
-    inventory.deserialize(request.get_json())
-    inventory.update()
+        return not_found("Inventory with ({}, {})".format(product_id, condition))
 
-    APP.logger.info("Inventory (%d, %s) updated.", product_id, condition)
+    resp_old = inventory.serialize()
+    resp_new = request.get_json()
+    for key in resp_old.keys():
+        if key in resp_new:
+            resp_old[key] = resp_new[key]
+
+    if inventory.quantity == 0:
+        inventory.available = 0
+
+    inventory.deserialize(resp_old)
+    inventory.validate_data()
+    inventory.update()
+    APP.logger.info("Inventory ({}, {}) updated.".format(product_id, condition))
     return make_response(jsonify(inventory.serialize()), status.HTTP_200_OK)
 
-
-################################################################################
-# DELETE A RECORD
-################################################################################
-@APP.route("/inventory/<int:product_id>/<string:condition>", methods=["DELETE"])
-def delete_inventory(product_id, condition):
-    """Deletes an inventory with the given product_id and condition"""
-    APP.logger.info("Request to delete inventory with key (%d, %s)", product_id, condition)
+@APP.route("/inventory/<int:product_id>/condition/<string:condition>/restock", methods=["PUT"])
+def update_inventory_restock(product_id, condition):
+    """- Given the product_id, condition and amount (body) this updates quantity += amount"""
+    if not PERMISSION:
+        return bad_request("You do not have permissions to RESTOCK")
+    APP.logger.info("Request to update inventory with key ({}, {})"\
+                    .format(product_id, condition))
+    check_content_type("application/json")
     inventory = Inventory.find(product_id, condition)
-    if inventory:
-        inventory.delete()
+    if not inventory:
+        return not_found("Inventory with ({}, {})".format(product_id, condition))
 
-    APP.logger.info("Inventory with product_id %d and condition %s deleted", product_id, condition)
-    return make_response("", status.HTTP_204_NO_CONTENT)
+    json = request.get_json()
+    if "amount" not in json.keys():
+        return bad_request("Invalid data: Amount missing")
+    amount = json['amount']
+    if inventory.quantity + amount > inventory.quantity:
+        inventory.quantity += amount
+    else:
+        return forbidden("Invalid data: Amount <= 0")
 
+    inventory.validate_data()
+    inventory.update()
+    APP.logger.info("Inventory ({}, {}) updated.".format(product_id, condition))
+    return make_response(jsonify(inventory.serialize()), status.HTTP_200_OK)
 
-################################################################################
-# UPDATE AN EXISTING PRODUCT's QUANTITY
-################################################################################
-# @APP.route("/inventory/<int:product_id>/<string:condition>/<string:operation>/<int:amount>",
-            # methods=["PUT"])
-# def update_stock(product_id, condition, operation, amount):
-#     """Updates the inventory with the given product_id and condition"""
-#     APP.logger.info("Request to update quantity of product in inventory\
-                        # with product_id %d and condition %s", product_id, condition)
-#
-#
-#     if amount == 0:
-#         return bad_request("Wrong update amount parameter specified.\
-            # Amount can only be a non zero whole number Eg : /inventory/123/new/add/1")
-#
-#     if operation != "add" and operation != "sub":
-#         return bad_request("Wrong operation specified.\
-            # Operation can only be add or sub in http request. Eg : /inventory/123/new/add/1")
-#
-#     inventory = Inventory.find(product_id, condition)
-#     if not inventory:
-#         raise NotFound("Inventory with product_id {} and condition {} was not found."\
-                            # .format(product_id, condition))
-#
-#     msg_tmp = " "
-#
-#     if operation == "add":
-#         inventory.quantity = inventory.quantity + amount
-#         msg_tmp = "Added "
-#     else:
-#         inventory.quantity = inventory.quantity - amount
-#         if inventory.quantity < 0:
-#             return forbidden("Unable to perform operation. Current stock level is lesser\
-            # than specified subtract amount. Stock quantity can't become negative")
-#         msg_tmp = "Removed "
-#
-#     if inventory.quantity==0:
-#         inventory.available=0
-#
-#     inventory.update()
-#     APP.logger.info(msg_tmp+"%d items having product_id %d and condition %s.",\
-                    # amount, product_id, condition)
-#     return make_response(jsonify(inventory.serialize()), status.HTTP_200_OK)
+@APP.route("/inventory/<int:product_id>/condition/<string:condition>/activate", methods=["PUT"])
+def update_inventory_activate(product_id, condition):
+    """Given the product_id and condition this updates available = 1"""
+    if not PERMISSION:
+        return bad_request("You do not have permissions to ACTIVATE")
+    APP.logger.info("Request to update inventory with key ({}, {})"\
+                    .format(product_id, condition))
+    inventory = Inventory.find(product_id, condition)
+    if not inventory:
+        return not_found("Inventory with ({}, {})".format(product_id, condition))
 
-################################################################################
-# UPDATE AN EXISTING PRODUCT'S AVAILABILITY
-################################################################################
-# @APP.route("/inventory/<int:product_id>/<string:condition>/<int:available>", methods=["PUT"])
-# def update_availablility(product_id, condition, available):
-#     """Updates the available attribute for the given product_id and condition"""
-#     APP.logger.info("Sent request to update availability for the product ID %d\
-                    # and condition %s", product_id, condition)
-#
-#     if available != 0 or available!=1:
-#         return bad_request("Incorrect value for available, can only accept 0 or 1")
-#
-#     prod = Inventory.find(product_id, condition)
-#     if not prod:
-#         raise NotFound("The product ID, condition pair does not exist.")
-#
-#     if prod.quantity==0 and available==1:
-#         return forbidden("This product is currently out of stock and cannot be made available")
-#
-#     prod.available = available
-#     prod.update()
-#
-#
-#     if prod.available==1:
-#         APP.logger.info("The product with ID %d that satisfies \
-# the condition %s is now available.", product_id, condition)
-#     else:
-#         APP.logger.info("The product with ID %d that satisfies \
-# the condition %s is now unavailable.", product_id, condition)
-#     return make_response(jsonify(prod.serialize()), status.HTTP_200_OK)
+    if inventory.quantity == 0:
+        return forbidden("This product is currently out of stock and cannot be made available")
+    else:
+        inventory.available = 1
+
+    inventory.validate_data()
+    inventory.update()
+    APP.logger.info("Inventory ({}, {}) updated.".format(product_id, condition))
+    return make_response(jsonify(inventory.serialize()), status.HTTP_200_OK)
+
+@APP.route("/inventory/<int:product_id>/condition/<string:condition>/deactivate", methods=["PUT"])
+def update_inventory_deactivate(product_id, condition):
+    """Given the product_id and condition this updates available = 0"""
+    if not PERMISSION:
+        return bad_request("You do not have permissions to DEACTIVATE")
+    APP.logger.info("Request to update inventory with key ({}, {})"\
+                    .format(product_id, condition))
+    inventory = Inventory.find(product_id, condition)
+    if not inventory:
+        return not_found("Inventory with ({}, {})".format(product_id, condition))
+
+    inventory.available = 0
+    inventory.validate_data()
+    inventory.update()
+    APP.logger.info("Inventory ({}, {}) updated.".format(product_id, condition))
+    return make_response(jsonify(inventory.serialize()), status.HTTP_200_OK)
 
 ################################################################################
 #  U T I L I T Y   F U N C T I O N S
@@ -334,5 +382,10 @@ def check_content_type(content_type):
     """ Checks that the media type is correct """
     if request.headers["Content-Type"] == content_type:
         return
-    APP.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
+    APP.logger.error("Invalid Content-Type: {}".format(request.headers["Content-Type"]))
     abort(415, "Content-Type must be {}".format(content_type))
+
+def set_permissions(perm):
+    """ Sets the Permission """
+    global PERMISSION
+    PERMISSION = perm
