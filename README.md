@@ -8,7 +8,6 @@ The inventory resource keeps track of how many of each product we have in our wa
 ## Inventory Travis CI
 
 [![Build Status](https://travis-ci.org/devops-fall-20-inventory/inventories.svg?branch=master)](https://travis-ci.org/devops-fall-20-inventory/inventories)
-
 [![codecov](https://codecov.io/gh/devops-fall-20-inventory/inventories/branch/master/graph/badge.svg?token=WHT72OFUGH)](undefined)
 
 ## Squad
