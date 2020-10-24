@@ -6,14 +6,14 @@ python:
 install: "pip install -r requirements.txt"
 
 services:
- - postgresql
+  - postgresql
  
 env:
- - DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres")
+  - DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres")
 
 # commands to run tests
 before_script: 
- - psql -c 'create database postgres;' -U postgres
+  - psql -c 'create database postgres;' -U postgres
 
 script:
   - nosetests
