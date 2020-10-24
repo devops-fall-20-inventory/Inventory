@@ -9,7 +9,7 @@ services:
   - postgresql
  
 env:
-  - DATABASE_URI = postgres://postgres:postgres@localhost:5432/postgres
+  - DATABASE_URI = postgres://postgres:@localhost:5432/postgres
 
 # commands to run tests
 before_script: 
