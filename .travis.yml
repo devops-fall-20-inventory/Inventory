@@ -9,11 +9,11 @@ services:
   - postgresql
  
 env:
-  - DATABASE_URI = postgres://postgres:@localhost:5432/postgres
+  - DATABASE_URI = postgres://postgres:@localhost:5432/travistests
 
 # commands to run tests
 before_script: 
-  - psql -c 'create database postgres;' -U postgres
+  - psql -c 'create database travistests;' -U postgres
 
 script:
   - nosetests
