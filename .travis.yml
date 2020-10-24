@@ -7,9 +7,6 @@ install: "pip install -r requirements.txt"
 
 services:
   - postgresql
- 
-env:
-  - DATABASE_URI = postgres://postgres:@localhost:5432/travistests
 
 # commands to run tests
 before_script: 
