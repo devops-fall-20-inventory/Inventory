@@ -5,6 +5,7 @@ python:
 # command to install dependencies
 install:
     - "pip install -r requirements.txt"
+    - "export PYTHONPATH=$PYTHONPATH:$(pwd)"
 
 # commands to run tests
 before_script:
