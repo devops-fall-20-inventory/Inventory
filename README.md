@@ -1,4 +1,8 @@
-# Inventory 
+# Inventory
+
+[![Build Status](https://travis-ci.org/devops-fall-20-inventory/inventories.svg?branch=master)](https://travis-ci.org/devops-fall-20-inventory/inventories)
+[![codecov](https://codecov.io/gh/devops-fall-20-inventory/inventories/branch/master/graph/badge.svg?token=WHT72OFUGH)](undefined)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Description
 This repository contains all the work of the Inventory Squad as part of the Fall '20 DevOps under [John Rofrano](https://github.com/rofrano).
@@ -9,7 +13,7 @@ The inventory resource keeps track of how many of each product we have in our wa
 
 1. [Arahant Ashok Kumar](https://github.com/arahant) - Product Owner
 2. [Arun Muthu](https://github.com/arungithub9)
-3. [Hardik Rokad](https://github.com/hardikr586) 
+3. [Hardik Rokad](https://github.com/hardikr586)
 4. [Jiazhou Liu](https://github.com/602071349) - Agile Coach
 5. [Kainat Naeem](https://github.com/kainattnaeem)
 
@@ -31,11 +35,11 @@ The inventory resource keeps track of how many of each product we have in our wa
     GET /inventory/<int:product_id>
 
     Creates a new inventory in the Inventory DB
-    based on the JSON data in the request body 
+    based on the JSON data in the request body
     POST /inventory
 
     Updates the inventory with the given product_id and condition
-    based on the JSON data in the request body 
+    based on the JSON data in the request body
     PUT /inventory/<int:product_id>/<string:condition>
 
     Deletes an inventory with the given product_id and condition
@@ -59,8 +63,8 @@ cd /vagrant
 FLASK_APP=service:app flask run -h 0.0.0.0
 ```
 Then you can test the application in the browser from you host machine, or you can use Postman for sending http requests. You can also type nosetests under /vagrant to check different test cases and the overall coverage.
-    
-    
+
+
 ### Code Analysis Using Pylint
 Code analysis settings are pre-configured to get code analysis for the code base just run the following commands once in /vagrant directory.
 ```
@@ -68,5 +72,3 @@ pylint service
 pylint tests
 
 ```
-    
-

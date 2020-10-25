@@ -48,11 +48,8 @@ class InventoryFactory(factory.Factory):
         data = []
         global test_data_file
         try:
-            fr = open("/vagrant/tests/data_to_test.csv",'r')
+            fr = open("./tests/data_to_test.csv",'r')
             line = fr.readline()
-            # row  = line.strip().split(',')
-            # if row[0]:
-                # data.append(row)
             while line:
                 line = fr.readline()
                 row  = line.strip().split(',')
