@@ -201,7 +201,8 @@ class Inventory(DB.Model):
     @classmethod
     def find_or_404(cls, pid, condition):
         """ Find an Inventory record by its product_id and condition """
-        LOGGER.info("Processing GET or 404 for product_id {} and condition {}".format(pid, condition))
+        LOGGER.info("Processing GET or 404 for product_id {} and condition {}"\
+                    .format(pid, condition))
         return cls.query.get_or_404((pid, condition))
 
     #
