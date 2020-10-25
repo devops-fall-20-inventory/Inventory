@@ -17,7 +17,7 @@ AVAILABLE_FALSE = 0
 QTY_LOW = 0
 QTY_HIGH = 50
 QTY_STEP = 1
-RESTOCK_LVL = 5
+RESTOCK_LVL = 50
 MAX_ATTR = 5
 
 ATTR_DEFAULT = 0
@@ -93,26 +93,26 @@ class Inventory(DB.Model):
 
         res_pid = self.validate_data_product_id()
         if not res_pid:
-            args.append(ATTR_PRODUCT_ID)
+            args.append("Product ID")
 
         res_cnd = self.validate_data_condition()
         if not res_cnd:
-            args.append(ATTR_CONDITION)
+            args.append("Condition")
 
         res_qty = self.validate_data_quantity()
         if not res_qty:
-            args.append(ATTR_QUANTITY)
+            args.append("Quantity")
 
         res_lvl = self.validate_data_restock_level()
         if not res_lvl:
-            args.append(ATTR_RESTOCK_LEVEL)
+            args.append("Restock Level")
 
         res_avl = self.validate_data_available()
         if not res_avl:
-            args.append(ATTR_AVAILABLE)
+            args.append("Available")
 
         if not (res_pid and res_cnd and res_qty and res_lvl and res_avl):
-            msg = "Error in data arguments: {}".format(args)
+            msg = "Error in data: {}".format(args)
             raise DataValidationError(msg)
         return True
 
@@ -121,7 +121,9 @@ class Inventory(DB.Model):
         Validating Product ID format
         """
         pid = self.product_id
-        return isinstance(pid, int) and pid > 0
+        if isinstance(pid, str):
+            return pid.isdigit() and int(pid) >= 0
+        return isinstance(pid, int) and pid >= 0
 
     def validate_data_condition(self):
         """
@@ -135,28 +137,34 @@ class Inventory(DB.Model):
         Validating Quantity format
         """
         qty = self.quantity
-        return isinstance(qty, int) and (qty > 0 and qty <= QTY_HIGH)
+        if isinstance(qty, str):
+            return qty.isdigit() and int(qty) >= QTY_LOW and int(qty) <= QTY_HIGH
+        return isinstance(qty, int) and qty >= QTY_LOW and qty <= QTY_HIGH
 
     def validate_data_restock_level(self):
         """
         Validating Restock level format
         """
         lvl = self.restock_level
-        return isinstance(lvl, int) and (lvl > 0 and lvl <= RESTOCK_LVL)
+        if isinstance(lvl, str):
+            return lvl.isdigit() and int(lvl) >= QTY_LOW and int(lvl) <= RESTOCK_LVL
+        return isinstance(lvl, int) and (lvl >= QTY_LOW and lvl <= RESTOCK_LVL)
 
     def validate_data_available(self):
         """
         Validating Available format
         """
         avl = self.available
-        return isinstance(avl, type(AVAILABLE_TRUE)) and avl in [AVAILABLE_TRUE, AVAILABLE_FALSE]
+        if isinstance(avl, str):
+            return avl.isdigit() and int(avl) in [AVAILABLE_TRUE, AVAILABLE_FALSE]
+        return isinstance(avl, int) and avl in [AVAILABLE_TRUE, AVAILABLE_FALSE]
 
     ######################################################################
     def create(self):
         """
         Creates an Inventory record to the database
         """
-        LOGGER.info("Creating %d", self.product_id)
+        LOGGER.info("Creating {}".format(self.product_id))
         DB.session.add(self)
         DB.session.commit()
 
@@ -165,13 +173,13 @@ class Inventory(DB.Model):
         """
         Updates an Inventory record to the database
         """
-        LOGGER.info("Saving %d", self.product_id)
+        LOGGER.info("Updating {}".format(self.product_id))
         DB.session.commit()
 
     ######################################################################
     def delete(self):
         """ Removes an Inventory record from the data store """
-        LOGGER.info("Deleting %d", self.product_id)
+        LOGGER.info("Deleting {}".format(self.product_id))
         DB.session.delete(self)
         DB.session.commit()
 
@@ -179,21 +187,21 @@ class Inventory(DB.Model):
     @classmethod
     def all(cls):
         """ Returns all of the Inventory records in the database """
-        LOGGER.info("Processing all Inventory records")
+        LOGGER.info("Processing GET all Inventory records")
         return cls.query.all()
 
     #
     @classmethod
     def find(cls, pid, condition):
         """ Finds an Inventory record by its product_id and condition """
-        LOGGER.info("Processing lookup for product_id %d and condition %s ", pid, condition)
+        LOGGER.info("Processing GET for product_id {} and condition {}".format(pid, condition))
         return cls.query.get((pid, condition))
 
     #
     @classmethod
     def find_or_404(cls, pid, condition):
         """ Find an Inventory record by its product_id and condition """
-        LOGGER.info("Processing lookup or 404 for product_id %d and condition %s", pid, condition)
+        LOGGER.info("Processing GET or 404 for product_id {} and condition {}".format(pid, condition))
         return cls.query.get_or_404((pid, condition))
 
     #
@@ -203,5 +211,5 @@ class Inventory(DB.Model):
         Args:
             product_id (Integer): the product_id of the Inventory record you want to match
         """
-        LOGGER.info("Processing name query for %s ...", product_id)
+        LOGGER.info("Processing GET query for {}...".format(product_id))
         return cls.query.filter(cls.product_id == product_id)
