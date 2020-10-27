@@ -17,58 +17,45 @@ The inventory resource keeps track of how many of each product we have in our wa
 4. [Jiazhou Liu](https://github.com/602071349) - Agile Coach
 5. [Kainat Naeem](https://github.com/kainattnaeem)
 
-## Version History
-
-1. Initial Repository Setup
-2. application runs locally
-
 ## Getting Started
 
-### Interfaces
-    Returns a list of all inventories in the inventory
-    GET /inventory
+### Database Schema
 
-    Returns the inventory with the given product_id and condition
-    GET /inventory/<int:product_id>/<string:condition>
+| Column | Data type | Condition |
+| --- | --- | --- |
+| `product_id` | `<integer>` | `product_id > 0` |
+| `condition` | `<string>` | `<new/used/open box>` |
+| `quantity` | `<integer>` | `quantity > 0` |
+| `restock_level` | `<integer>` | `restock_level > 0` |
+| `available` | `<integer>` | `available == 0/1` |
 
-    Returns the inventories with the given product_id
-    GET /inventory/<int:product_id>
+### APIs
 
-    Creates a new inventory in the Inventory DB
-    based on the JSON data in the request body
-    POST /inventory
+| Method | URI | Description |
+| --- | --- | --- |
+| `POST` | `/inventory` | Given the data body this creates an inventory record in the DB |
+| `GET` | `/inventory` | Returns a collection of all inventories in the DB |
+| `GET` | `/inventory?product_id=<int>` | Returns a collection of all inventories matching `product_id` |
+| `GET` | `/inventory/<int:product_id>/condition/<string:condition>` | Returns the inventory record with the given `product_id` and `condition` |
+| `PUT` | `/inventory/<int:product_id>/condition/<string:condition>` | Updates the inventory record with the given `product_id` and `condition` |
+| `PUT` | `/inventory/<int:product_id>/condition/<string:condition>/activate` | Given the `product_id` and `condition` this updates `available = 1` |
+| `PUT` | `/inventory/<int:product_id>/condition/<string:condition>/deactivate` | Given the `product_id` and `condition` this updates `available = 0` |
+| `PUT` | `/inventory/<int:product_id>/condition/<string:condition>/restock` | Given the `product_id`, `condition` and `amount` (body) this updates `quantity += amount` |
+| `DELETE` | `/inventory/<int:product_id>/condition/<string:condition>` | Given the `product_id` and `condition` this updates `available = 0` |
 
-    Updates the inventory with the given product_id and condition
-    based on the JSON data in the request body
-    PUT /inventory/<int:product_id>/<string:condition>
-
-    Deletes an inventory with the given product_id and condition
-    DELETE /inventory/<int:product_id>/<string:condition>
-
-    Sample JSON data format:
-	{
-	  "product_id":1234567,
-          "quantity":1,
-          "restock_level":10,
-          "condition":"new",
-          "available":1
-        }
-### Test and Running
+### Testing and Running
 
 To run and test the code, you can use the following command:
 ```
+git clone https://github.com/devops-fall-20-inventory/inventories.git
 vagrant up
 vagrant ssh
 cd /vagrant
-FLASK_APP=service:app flask run -h 0.0.0.0
-```
-Then you can test the application in the browser from you host machine, or you can use Postman for sending http requests. You can also type nosetests under /vagrant to check different test cases and the overall coverage.
-
-
-### Code Analysis Using Pylint
-Code analysis settings are pre-configured to get code analysis for the code base just run the following commands once in /vagrant directory.
-```
+nosetests
 pylint service
-pylint tests
-
+FLASK_APP=service:APP flask run -h 0.0.0.0
 ```
+
+1. You can type `nosetests` under `/vagrant` to check different test cases and the overall coverage. The coverage is displated by default.
+2.  PyLint should return a score more than 9.
+3. Then you can test the APIs in the browser from you host machine, or on Postman (recommended).
