@@ -1,7 +1,7 @@
 # Inventory
 
 [![Build Status](https://travis-ci.org/devops-fall-20-inventory/inventories.svg?branch=master)](https://travis-ci.org/devops-fall-20-inventory/inventories)
-[![codecov](https://codecov.io/gh/devops-fall-20-inventory/inventories/branch/master/graph/badge.svg?token=WHT72OFUGH)](undefined)
+<!-- [![codecov](https://codecov.io/gh/devops-fall-20-inventory/inventories/branch/master/graph/badge.svg?token=WHT72OFUGH)](undefined) -->
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Description
