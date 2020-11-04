@@ -4,7 +4,8 @@ import logging
 # Get configuration from environment
 # DATABASE_URI = "sqlite:///../db/development.db"
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres"
+    "DATABASE_URI",
+    "postgres://ajtoutzb:tDCcFv3UZ6PCbucbzCFFPOsFYAbaIman@echo.db.elephantsql.com:5432/ajtoutzb"
 )
 
 # Configure SQLAlchemy

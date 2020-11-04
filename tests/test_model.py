@@ -7,7 +7,7 @@ import sys
 import csv
 import logging
 import unittest
-from service import APP
+from service import app
 import service.model as model
 from service.model import Inventory, DataValidationError, DB
 from .inventory_factory import InventoryFactory
@@ -22,9 +22,9 @@ class InventoryTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """ These run once before Test suite """
-        APP.debug = False
+        app.debug = False
         # Set up the test database
-        APP.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
+        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
 
     @classmethod
     def tearDownClass(cls):
@@ -32,7 +32,7 @@ class InventoryTest(unittest.TestCase):
         pass
 
     def setUp(self):
-        Inventory.init_db(APP)
+        Inventory.init_db(app)
         DB.drop_all()  # clean up the last tests
         DB.create_all()  # make our sqlalchemy tables
 
