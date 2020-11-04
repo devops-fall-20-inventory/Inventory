@@ -25,6 +25,7 @@ class InventoryTest(unittest.TestCase):
         app.debug = False
         # Set up the test database
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
+        Inventory.init_db(app)
 
     @classmethod
     def tearDownClass(cls):
@@ -32,7 +33,6 @@ class InventoryTest(unittest.TestCase):
         pass
 
     def setUp(self):
-        Inventory.init_db(app)
         DB.drop_all()  # clean up the last tests
         DB.create_all()  # make our sqlalchemy tables
 
