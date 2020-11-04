@@ -33,14 +33,14 @@ The inventory resource keeps track of how many of each product we have in our wa
 
 | Method | URI | Description |
 | --- | --- | --- |
-| `POST` | `/inventory` | Given the data body this creates an inventory record in the DB |
-| `GET` | `/inventory` | Returns a collection of all inventories in the DB |
-| `GET` | `/inventory?product_id=<int>` | Returns a collection of all inventories matching `product_id` |
-| `GET` | `/inventory/<int:product_id>/condition/<string:condition>` | Returns the inventory record with the given `product_id` and `condition` |
-| `PUT` | `/inventory/<int:product_id>/condition/<string:condition>` | Updates the inventory record with the given `product_id` and `condition` |
-| `PUT` | `/inventory/<int:product_id>/condition/<string:condition>/activate` | Given the `product_id` and `condition` this updates `available = 1` |
-| `PUT` | `/inventory/<int:product_id>/condition/<string:condition>/deactivate` | Given the `product_id` and `condition` this updates `available = 0` |
-| `PUT` | `/inventory/<int:product_id>/condition/<string:condition>/restock` | Given the `product_id`, `condition` and `amount` (body) this updates `quantity += amount` |
+| `POST` | `https://devops-inventory.us-south.cf.appdomain.cloud/inventory` | Given the data body this creates an inventory record in the DB |
+| `GET` | `https://devops-inventory.us-south.cf.appdomain.cloud/inventory` | Returns a collection of all inventories in the DB |
+| `GET` | `https://devops-inventory.us-south.cf.appdomain.cloud/inventory?product_id=<int>` | Returns a collection of all inventories matching `product_id` |
+| `GET` | `https://devops-inventory.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>` | Returns the inventory record with the given `product_id` and `condition` |
+| `PUT` | `https://devops-inventory.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>` | Updates the inventory record with the given `product_id` and `condition` |
+| `PUT` | `https://devops-inventory.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/activate` | Given the `product_id` and `condition` this updates `available = 1` |
+| `PUT` | `https://devops-inventory.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/deactivate` | Given the `product_id` and `condition` this updates `available = 0` |
+| `PUT` | `https://devops-inventory.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/restock` | Given the `product_id`, `condition` and `amount` (body) this updates `quantity += amount` |
 | `DELETE` | `/inventory/<int:product_id>/condition/<string:condition>` | Given the `product_id` and `condition` this updates `available = 0` |
 
 ### Testing and Running
@@ -53,7 +53,7 @@ vagrant ssh
 cd /vagrant
 nosetests
 pylint service
-FLASK_APP=service:APP flask run -h 0.0.0.0
+FLASK_APP=service:app flask run -h 0.0.0.0
 ```
 
 1. You can type `nosetests` under `/vagrant` to check different test cases and the overall coverage. The coverage is displated by default.
