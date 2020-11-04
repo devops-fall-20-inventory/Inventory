@@ -57,5 +57,5 @@ FLASK_APP=service:app flask run -h 0.0.0.0
 ```
 
 1. You can type `nosetests` under `/vagrant` to check different test cases and the overall coverage. The coverage is displated by default.
-2.  PyLint should return a score more than 9.
+2. PyLint should return a score more than 9.
 3. Then you can test the APIs in the browser from you host machine, or on Postman (recommended).
