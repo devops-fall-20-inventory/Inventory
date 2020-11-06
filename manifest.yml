@@ -1,12 +1,12 @@
 ---
 # This manifest deploys a Python Flask application with a Cloudant database
 applications:
-- name: devops-inventory
+- name: nyu-inventory-service-f20
   path: .
   instances: 2
   memory: 64M
   routes:
-  - route: devops-inventory.us-south.cf.appdomain.cloud/
+  - route: nyu-inventory-service-f20.us-south.cf.appdomain.cloud/
   disk_quota: 1024M
   buildpacks:
   - python_buildpack
