@@ -13,7 +13,6 @@ from service.model import Inventory, DataValidationError, DB
 from .inventory_factory import InventoryFactory
 
 DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres")
-# DATABASE_URI="postgres://postgres:postgres@localhost:5432/postgres"
 
 ################################################################################
 #  Inventory Model test cases
@@ -31,6 +30,7 @@ class InventoryTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """ These run once after Test suite """
+        DB.session.close()
 
     def setUp(self):
         DB.drop_all()  # clean up the last tests
