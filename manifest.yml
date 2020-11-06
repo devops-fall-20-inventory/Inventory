@@ -12,7 +12,7 @@ applications:
   - python_buildpack
   timeout: 180
   services:
-  - ElephantSQL-Inventory
+  - Inventory-Prod
   env:
     FLASK_APP : service:app
     FLASK_DEBUG : false
