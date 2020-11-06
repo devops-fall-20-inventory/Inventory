@@ -29,25 +29,26 @@ The inventory resource keeps track of how many of each product we have in our wa
 | `restock_level` | `<integer>` | `restock_level > 0` |
 | `available` | `<integer>` | `available == 0/1` |
 
-### APIs
+### API endpoints
 
 | Method | URI | Description |
 | --- | --- | --- |
-| `POST` | `https://devops-inventory.us-south.cf.appdomain.cloud/inventory` | Given the data body this creates an inventory record in the DB |
-| `GET` | `https://devops-inventory.us-south.cf.appdomain.cloud/inventory` | Returns a collection of all inventories in the DB |
-| `GET` | `https://devops-inventory.us-south.cf.appdomain.cloud/inventory?product_id=<int>` | Returns a collection of all inventories matching `product_id` |
-| `GET` | `https://devops-inventory.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>` | Returns the inventory record with the given `product_id` and `condition` |
-| `PUT` | `https://devops-inventory.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>` | Updates the inventory record with the given `product_id` and `condition` |
-| `PUT` | `https://devops-inventory.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/activate` | Given the `product_id` and `condition` this updates `available = 1` |
-| `PUT` | `https://devops-inventory.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/deactivate` | Given the `product_id` and `condition` this updates `available = 0` |
-| `PUT` | `https://devops-inventory.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/restock` | Given the `product_id`, `condition` and `amount` (body) this updates `quantity += amount` |
+| `POST` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory` | Given the data body this creates an inventory record in the DB |
+| `GET` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory` | Returns a collection of all inventories in the DB |
+| `GET` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory?product_id=<int>` | Returns a collection of all inventories matching `product_id` |
+| `GET` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>` | Returns the inventory record with the given `product_id` and `condition` |
+| `PUT` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>` | Updates the inventory record with the given `product_id` and `condition` |
+| `PUT` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/activate` | Given the `product_id` and `condition` this updates `available = 1` |
+| `PUT` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/deactivate` | Given the `product_id` and `condition` this updates `available = 0` |
+| `PUT` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/restock` | Given the `product_id`, `condition` and `amount` (body) this updates `quantity += amount` |
 | `DELETE` | `/inventory/<int:product_id>/condition/<string:condition>` | Given the `product_id` and `condition` this updates `available = 0` |
 
-### Testing and Running
+### Testing and Running locally
 
 To run and test the code, you can use the following command:
 ```
 git clone https://github.com/devops-fall-20-inventory/inventories.git
+cd inventories
 vagrant up
 vagrant ssh
 cd /vagrant
