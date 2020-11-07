@@ -3,7 +3,7 @@ Models for Inventory
 All of the models are stored in this module
 """
 import logging
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy, sqlalchemy
 
 LOGGER = logging.getLogger("flask.app")
 
@@ -29,6 +29,9 @@ ATTR_AVAILABLE = 5
 
 class DataValidationError(Exception):
     """ Used for an data validation errors when deserializing """
+
+class DBError(Exception):
+    """ Used for an DB connectivity errors """
 
 ################################################################################
 class Inventory(DB.Model):
@@ -77,12 +80,19 @@ class Inventory(DB.Model):
     @classmethod
     def init_db(cls, app):
         """ Initializes the database session """
-        LOGGER.info("Initializing database")
-        cls.app = app
-        # This is where we initialize SQLAlchemy from the Flask app
-        DB.init_app(app)
-        app.app_context().push()
-        DB.create_all()  # make our sqlalchemy tables
+        try:
+            LOGGER.info("Initializing database")
+            cls.app = app
+            # This is where we initialize SQLAlchemy from the Flask app
+            DB.init_app(app)
+            app.app_context().push()
+            DB.create_all()  # make our sqlalchemy tables
+        except sqlalchemy.exc.ArgumentError as err:
+            raise DBError("Invalid DB connection: {}".format(err))
+        except sqlalchemy.exc.OperationalError as err:
+            raise DBError("Invalid DB connection: {}".format(err))
+        except sqlalchemy.exc.InvalidRequestError as err:
+            raise DBError("Invalid DB connection: {}".format(err))
 
     ######################################################################
     def validate_data(self):

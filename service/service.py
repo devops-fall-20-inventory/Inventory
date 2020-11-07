@@ -37,7 +37,7 @@ from flask_api import status  # HTTP Status Codes
 # from werkzeug.exceptions import BadRequest
 # from flask_sqlalchemy import SQLAlchemy
 # import service.model as model
-from service.model import Inventory, DataValidationError
+from service.model import Inventory, DataValidationError, DBError
 
 # Import Flask application
 from . import app
@@ -52,6 +52,11 @@ PERMISSION = True
 def request_validation_error(error):
     """ Handles Value Errors from bad data """
     return bad_request(error)
+
+@app.errorhandler(DBError)
+def db_connection_error(error):
+    """ Handles unsuccessful DB connectivity errors """
+    return internal_server_error(error)
 
 @app.errorhandler(status.HTTP_400_BAD_REQUEST)
 def bad_request(error):

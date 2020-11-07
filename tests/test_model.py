@@ -9,7 +9,7 @@ import logging
 import unittest
 from service import app
 import service.model as model
-from service.model import Inventory, DataValidationError, DB
+from service.model import Inventory, DB, DataValidationError, DBError
 from .inventory_factory import InventoryFactory
 
 DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres")
@@ -18,6 +18,7 @@ DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost
 #  Inventory Model test cases
 ################################################################################
 class InventoryTest(unittest.TestCase):
+    """ Inventory Model Tests """
 
     @classmethod
     def setUpClass(cls):
@@ -45,6 +46,18 @@ class InventoryTest(unittest.TestCase):
         pid = 1234567
         inventory = Inventory(product_id=pid)
         msg = inventory.__repr__()
+
+    def test_db_err(self):
+        """Testing DB connection errors"""
+        DB.session.close()
+        uri_list = ["", "postgres://postgres:postgres@localhost:1234/cooldude"]
+        for uri in uri_list:
+            self.db_err(uri)
+        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
+
+    def db_err(self, uri):
+        app.config["SQLALCHEMY_DATABASE_URI"] = uri
+        self.assertRaises(DBError, Inventory.init_db, app)
 
     ######################################################################
     ## Utility
