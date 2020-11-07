@@ -52,13 +52,20 @@ class InventoryAPITest(TestCase):
 ######################################################################
 
     def test_405(self):
-        service.method_not_supported("Testing")
+        """Testing 405 error"""
+        service.method_not_supported("Testing 405")
 
     def test_500(self):
-        service.internal_server_error("Testing")
+        """Testing 500 error"""
+        service.internal_server_error("Testing 500")
 
     def test_409(self):
-        service.create_conflict_error("Testing")
+        """Testing 409 error"""
+        service.create_conflict_error("Testing 409")
+
+    def test_db(self):
+        """Testing DB error"""
+        service.db_connection_error("Testing DB error")
 
     def test_wrong_content_type(self):
         """trigger wrong content type error"""
