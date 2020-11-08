@@ -372,7 +372,6 @@ class InventoryAPITest(TestCase):
                         json=body,
                         content_type="application/json",
                     )
-                    print(a, key, resp.status_code)
                     if a < 0:
                         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
                     elif key != 'amount':
