@@ -58,8 +58,7 @@ class InventoryAPITest(TestCase):
         """ Test the Home Page """
         resp = self.app.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(data["name"], service.DEMO_MSG)
+        self.assertIn(service.DEMO_MSG, str(resp.data))
 
     def _create_inventories(self, count):
         """ Factory method to create inventory products in bulk """

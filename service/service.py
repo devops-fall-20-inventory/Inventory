@@ -35,7 +35,7 @@ from service.error_handlers import *
 
 from . import app
 
-DEMO_MSG = "Inventory Demo REST API Service"
+DEMO_MSG = "Inventory REST API Service"
 PERMISSION = True
 
 ################################################################################
@@ -45,14 +45,15 @@ PERMISSION = True
 def index():
     """ Root URL response """
     app.logger.info("Request for Root URL")
-    return (
-        jsonify(
-            name=DEMO_MSG,
-            version="1.0",
-            paths=url_for("list_inventories", _external=True),
-        ),
-        status.HTTP_200_OK,
-    )
+    return app.send_static_file('index.html')
+    # return (
+    #     jsonify(
+    #         name=DEMO_MSG,
+    #         version="1.0",
+    #         paths=url_for("list_inventories", _external=True),
+    #     ),
+    #     status.HTTP_200_OK,
+    # )
 
 ################################################################################
 # GET
