@@ -28,126 +28,15 @@ Paths:
     - Given the product_id and condition this updates available = 0
 """
 
-# import os
-# import sys
-# import logging
 from flask import jsonify, request, url_for, make_response, abort
-from flask_api import status  # HTTP Status Codes
-# from werkzeug.exceptions import NotFound
-# from werkzeug.exceptions import BadRequest
-# from flask_sqlalchemy import SQLAlchemy
-# import service.model as model
-from service.model import Inventory, DataValidationError, DBError
+from flask_api import status
+from service.model import Inventory
+from service.error_handlers import *
 
-# Import Flask application
 from . import app
 
 DEMO_MSG = "Inventory Demo REST API Service"
 PERMISSION = True
-
-################################################################################
-# Error Handlers
-################################################################################
-@app.errorhandler(DataValidationError)
-def request_validation_error(error):
-    """ Handles Value Errors from bad data """
-    return bad_request(error)
-
-@app.errorhandler(DBError)
-def db_connection_error(error):
-    """ Handles unsuccessful DB connectivity errors """
-    return internal_server_error(error)
-
-@app.errorhandler(status.HTTP_400_BAD_REQUEST)
-def bad_request(error):
-    """ Handles bad reuests with 400_BAD_REQUEST """
-    message = str(error)
-    app.logger.warning(message)
-    return (
-        jsonify(
-            status=status.HTTP_400_BAD_REQUEST, error="Bad Request", message=message
-        ),
-        status.HTTP_400_BAD_REQUEST,
-    )
-
-@app.errorhandler(status.HTTP_404_NOT_FOUND)
-def not_found(error):
-    """ Handles resources not found with 404_NOT_FOUND """
-    message = str(error)
-    app.logger.warning(message)
-    return (
-        jsonify(status=status.HTTP_404_NOT_FOUND, error="Not Found", message=message),
-        status.HTTP_404_NOT_FOUND,
-    )
-
-@app.errorhandler(status.HTTP_403_FORBIDDEN)
-def forbidden(error):
-    """
-    Handles resources that cant be modified with 403 FORBIDDEN
-    Eg : changes that result in stock level to be less than zero
-    """
-    message = str(error)
-    app.logger.warning(message)
-    return (
-        jsonify(status=status.HTTP_403_FORBIDDEN, error="Forbidden", message=message),
-        status.HTTP_403_FORBIDDEN,
-    )
-
-@app.errorhandler(status.HTTP_405_METHOD_NOT_ALLOWED)
-def method_not_supported(error):
-    """ Handles unsuppoted HTTP methods with 405_METHOD_NOT_SUPPORTED """
-    message = str(error)
-    app.logger.warning(message)
-    return (
-        jsonify(
-            status=status.HTTP_405_METHOD_NOT_ALLOWED,
-            error="Method not Allowed",
-            message=message,
-        ),
-        status.HTTP_405_METHOD_NOT_ALLOWED,
-    )
-
-@app.errorhandler(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-def mediatype_not_supported(error):
-    """ Handles unsuppoted media requests with 415_UNSUPPORTED_MEDIA_TYPE """
-    message = str(error)
-    app.logger.warning(message)
-    return (
-        jsonify(
-            status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            error="Unsupported media type",
-            message=message,
-        ),
-        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-    )
-
-@app.errorhandler(status.HTTP_500_INTERNAL_SERVER_ERROR)
-def internal_server_error(error):
-    """ Handles unexpected server error with 500_SERVER_ERROR """
-    message = str(error)
-    app.logger.error(message)
-    return (
-        jsonify(
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            error="Internal Server Error",
-            message=message,
-        ),
-        status.HTTP_500_INTERNAL_SERVER_ERROR,
-    )
-
-@app.errorhandler(status.HTTP_409_CONFLICT)
-def create_conflict_error(error):
-    """ Handles CREATE conflicts error with HTTP_409_CONFLICT """
-    message = str(error)
-    app.logger.error(message)
-    return (
-        jsonify(
-            status=status.HTTP_409_CONFLICT,
-            error="Conflict 409 Error",
-            message=message,
-        ),
-        status.HTTP_409_CONFLICT,
-    )
 
 ################################################################################
 # INDEX
@@ -182,7 +71,7 @@ def list_inventories():
         if pid:
             inventories = Inventory.find_by_product_id(pid)
         else:
-            return method_not_supported("Invalid request parameters: missing (product_id)")
+            return bad_request("Invalid request parameters: missing (product_id)")
     else:
         inventories = Inventory.all()
 
@@ -207,7 +96,7 @@ def get_inventory_by_pid_condition(product_id, condition):
                     .format(product_id, condition))
     inventory = Inventory.find(product_id, condition)
     if (not inventory) or\
-        (inventory and PERMISSION is False and inventory.serialize()['available'] == 0):
+        (inventory and inventory.serialize()['available'] == 0):
         return not_found("Inventory ({}, {})".format(product_id, condition))
     app.logger.info("Return inventory with product_id {} and condition {}"\
                     .format(product_id, condition))
@@ -300,19 +189,27 @@ def update_inventory_restock(product_id, condition):
         return bad_request("You do not have permissions to RESTOCK")
     app.logger.info("Request to update inventory with key ({}, {})"\
                     .format(product_id, condition))
+
+    # Checking for Content-Type
     check_content_type("application/json")
+
+    # Checking for 'amount' keyword
+    json = request.get_json()
+    print(json.keys())
+    if "amount" not in json.keys():
+        return bad_request("Invalid data: Amount missing")
+
+    # Checking for amount >= 0
+    amount = json['amount']
+    if amount<0:
+        return forbidden("Invalid data: Amount <= 0")
+
+    # If there is no matching inventory
     inventory = Inventory.find(product_id, condition)
     if not inventory:
         return not_found("Inventory with ({}, {})".format(product_id, condition))
 
-    json = request.get_json()
-    if "amount" not in json.keys():
-        return bad_request("Invalid data: Amount missing")
-    amount = json['amount']
-    if inventory.quantity + amount > inventory.quantity:
-        inventory.quantity += amount
-    else:
-        return forbidden("Invalid data: Amount <= 0")
+    inventory.quantity += amount
 
     inventory.validate_data()
     inventory.update()
