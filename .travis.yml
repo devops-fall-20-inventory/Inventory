@@ -12,7 +12,7 @@ services:
     - docker
 
 env:
-  - DATABASE_URI=""
+  - DATABASE_URI="postgres://smtkdjbz:KSb1h5TXFY7F7GyaeClOchNO_925cIuZ@lallah.db.elephantsql.com:5432/smtkdjbz"
 
 install:
     - sudo apt-get install -y chromium-chromedriver python3-selenium
