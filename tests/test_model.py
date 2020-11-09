@@ -51,7 +51,7 @@ class InventoryTest(unittest.TestCase):
         inventory = Inventory(product_id=pid)
         msg = inventory.__repr__()
 
-    def test_db_err(self):
+    def tes_db_err(self):
         """Testing DB connection errors"""
         DB.session.close()
         uri_list = ["", "postgres://postgres:postgres@localhost:1234/cooldude"]
