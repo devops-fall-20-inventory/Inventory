@@ -39,6 +39,8 @@ The inventory resource keeps track of how many of each product we have in our wa
 
 ### API endpoints
 
+IBM CloudFoundry URL: `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud`
+
 | Method | URI | Description | Content-Type | Sample Payload |
 | --- | --- | ------ | --- | ------- |
 | `POST` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory` | Given the data body this creates an inventory record in the DB | application/json | ```{"product_id": 321,"condition": "new","available": 1,"quantity": 2,"restock_level": 1}``` |
