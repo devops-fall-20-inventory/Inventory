@@ -140,7 +140,7 @@ class Inventory(DB.Model):
         validating Condition format
         """
         cnd = self.condition
-        return isinstance(cnd, str) and cnd.lower() in CONDITIONS
+        return isinstance(cnd, str) and cnd in CONDITIONS
 
     def validate_data_quantity(self):
         """

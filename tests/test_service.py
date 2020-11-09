@@ -10,9 +10,9 @@ from unittest.mock import MagicMock, patch
 from werkzeug import test
 from werkzeug.wrappers import Response
 from flask_api import status  # HTTP Status Codes
-from service import app, service
+from service import app, service, error_handlers
 from service.service import app, init_db, set_permissions
-from service.model import Inventory, DataValidationError, DB
+from service.model import Inventory, DataValidationError, DB, DBError
 from .inventory_factory import InventoryFactory
 
 DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres")
@@ -21,7 +21,11 @@ PERMS = [True, False]
 BASE = service.PERMISSION
 
 class InventoryAPITest(TestCase):
-    """ Inventory Services Tests """
+    """
+    ######################################################################
+    Inventory Routes Tests
+    ######################################################################
+    """
 
     @classmethod
     def setUpClass(cls):
@@ -50,52 +54,11 @@ class InventoryAPITest(TestCase):
 ######################################################################
 #  T E S T   C A S E S
 ######################################################################
-
-    def test_405(self):
-        """Testing 405 error"""
-        service.method_not_supported("Testing 405")
-
-    def test_500(self):
-        """Testing 500 error"""
-        service.internal_server_error("Testing 500")
-
-    def test_409(self):
-        """Testing 409 error"""
-        service.create_conflict_error("Testing 409")
-
-    def test_db(self):
-        """Testing DB error"""
-        service.db_connection_error("Testing DB error")
-
-    def test_wrong_content_type(self):
-        """trigger wrong content type error"""
-        set_permissions(BASE)
-        test_inventory = InventoryFactory()
-        resp = self.app.post("/inventory", json=test_inventory.serialize(), content_type="text")
-        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-
-    @patch('service.service.create_inventory')
-    def test_bad_request(self, bad_request_mock):
-        """ Bad Request error from Create Inventory """
-        bad_request_mock.side_effect = DataValidationError()
-        resp = self.app.post('/inventory', json="",
-                             content_type='application/json')
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
-    @patch('service.service.create_inventory')
-    def create_conflict_error(self, conflict_mock):
-        """ Conflict Error from Create Inventory """
-        conflict_mock.side_effect = DataValidationError()
-        resp = self.app.post('/inventory', json="",
-                             content_type='application/json')
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
     def test_index(self):
         """ Test the Home Page """
         resp = self.app.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(data["name"], service.DEMO_MSG)
+        self.assertIn(service.DEMO_MSG, str(resp.data))
 
     def _create_inventories(self, count):
         """ Factory method to create inventory products in bulk """
@@ -156,7 +119,7 @@ class InventoryAPITest(TestCase):
 
         # Check that the location header was correct
         resp = self.app.get(location, content_type="application/json")
-        if new_inventory["available"]==1 or service.PERMISSION:
+        if new_inventory["available"]==1 and service.PERMISSION:
             self.assertEqual(resp.status_code, status.HTTP_200_OK)
             new_inventory = resp.get_json()[0]
             self.assertTrue(new_inventory != None)
@@ -256,7 +219,7 @@ class InventoryAPITest(TestCase):
         cnd = test_inventory.condition
         resp = self.app.get("/inventory/{}/condition/{}".format(pid, cnd),\
                             content_type="application/json")
-        if test_inventory.available==1 or service.PERMISSION:
+        if test_inventory.available==1 and service.PERMISSION:
             self.assertEqual(resp.status_code, status.HTTP_200_OK)
             data = resp.get_json()[0]
             self.assertEqual(data["product_id"], pid)
@@ -400,18 +363,20 @@ class InventoryAPITest(TestCase):
                     key = 'amount'
                     if a >= 2:
                         key = 'amounty'
+                        if 'amount' in body:
+                            del body['amount']
                     body[key] = a
                     resp = self.app.put(
                         "/inventory/{}/condition/{}/restock".format(new_inventory["product_id"], new_inventory["condition"]),
                         json=body,
                         content_type="application/json",
                     )
-                    if key is not 'amount':
-                        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-                    elif a > 0:
-                        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-                    else:
+                    if a < 0:
                         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+                    elif key != 'amount':
+                        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+                    else:
+                        self.assertEqual(resp.status_code, status.HTTP_200_OK)
             else:
                 self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -429,6 +394,7 @@ class InventoryAPITest(TestCase):
 
         resp = self.app.put(
                 "/inventory/{}/condition/{}/restock".format(pid, cnd),
+                json={"amount":0},
                 content_type="application/json",
             )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)

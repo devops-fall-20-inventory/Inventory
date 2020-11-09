@@ -18,7 +18,11 @@ DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost
 #  Inventory Model test cases
 ################################################################################
 class InventoryTest(unittest.TestCase):
-    """ Inventory Model Tests """
+    """
+    ######################################################################
+    Inventory Model Tests
+    ######################################################################
+    """
 
     @classmethod
     def setUpClass(cls):

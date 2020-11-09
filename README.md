@@ -2,7 +2,15 @@
 
 [![Build Status](https://travis-ci.org/devops-fall-20-inventory/inventories.svg?branch=master)](https://travis-ci.org/devops-fall-20-inventory/inventories)
 [![codecov](https://codecov.io/gh/devops-fall-20-inventory/inventories/branch/master/graph/badge.svg?token=WHT72OFUGH)](https://codecov.io/gh/devops-fall-20-inventory/inventories)
+
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/)
+
+[![GitHub issues](https://img.shields.io/github/issues/devops-fall-20-inventory/inventories)](https://github.com/devops-fall-20-inventory/inventories/issues)
+[![GitHub closed issues](https://img.shields.io/github/issues-closed/devops-fall-20-inventory/inventories?color=g)](https://github.com/devops-fall-20-inventory/inventories/issues?q=is%3Aissue+is%3Aclosed)
+
+[![GitHub commits](https://img.shields.io/github/commit-activity/m/devops-fall-20-inventory/inventories)](https://github.com/devops-fall-20-inventory/inventories/commits)
+[![GitHub last commit](https://img.shields.io/github/last-commit/devops-fall-20-inventory/inventories?color=blue)](https://github.com/devops-fall-20-inventory/inventories/commit/master)
 
 ## Description
 This repository contains all the work of the Inventory Squad as part of the Fall '20 DevOps under [John Rofrano](https://github.com/rofrano).
