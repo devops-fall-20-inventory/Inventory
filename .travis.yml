@@ -1,19 +1,42 @@
+sudo: required
+
 language: python
 python:
     - "3.7.9"
 
-# command to install dependencies
-install: "pip install -r requirements.txt"
+addons:
+  chrome: stable
+
+services:
+    - postgresql
+    - docker
+
+# before_install:
+#     - docker pull postgres:alpine
+#     - docker run -d --name postgres -p 5432:5432 -v psql_data:/var/lib/postgresql/data -e POSTGRES_PASSWORD=postgres
+#     postgres:alpine
+#     - docker ps -a
+
+env:
+  - DATABASE_URI=""
+
+install:
+    - sudo apt-get install -y chromium-chromedriver python3-selenium
+    - "pip install -r requirements.txt"
 
 # commands to run tests
 before_script:
     - pg_isready
+    - chromedriver --version
+    - curl -X GET http://localhost:5984/
+    - curl -X PUT http://admin:pass@localhost:5984/test
+    - gunicorn --log-level=critical --bind=127.0.0.1:5000 service:app &  # start a Web server in the background
+    - sleep 5 # give Web server some time to bind to sockets, etc
+    - curl -I http://localhost:5000/  # make sure the service is up
 
 script:
     - nosetests
+    - behave
 
 after_success:
     - codecov
-
-services:
-    - postgresql
