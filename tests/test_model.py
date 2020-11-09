@@ -58,6 +58,7 @@ class InventoryTest(unittest.TestCase):
         for uri in uri_list:
             self.db_err(uri)
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
+        Inventory.init_db(app)
 
     def db_err(self, uri):
         app.config["SQLALCHEMY_DATABASE_URI"] = uri
