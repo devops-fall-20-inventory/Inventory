@@ -16,28 +16,29 @@ Scenario: Inventory server is running
     And I should not see "404 Not Found"
 
 Scenario: Create an Inventory
-    # When I visit the "Home Page"
-    # And I set the "Product_id" to "1"
-    # And I set the "Quantity" to "5"
-    # And I set the "Restock_level" to "0"
-    # And I select "New" in the "Condition" dropdown
-    # And I select "True" in the "Available" dropdown
-    # And I press the "Create" button
-    # Then I should see the message "Success"
-    #
-    # When I copy the "Product_id" field
-    # And I press the "Clear" button
-    # Then the "Product_id" field should be empty
-    # Then the "Quantity" field should be empty
-    # Then the "Restock_level" field should be empty
-    #
-    # When I press the "Product_id" field
-    # And I press the "Retrieve" button
-    # Then I should see "1" in the "Product_id" field
-    # And I should see "New" in the "Condition" dropdown
-    # And I should see "5" in the "Quantity" field
-    # And I should see "0" in the "Restock_level" field
-    # And I should see "True" in the "Available" dropdown
+    When I visit the "Home Page"
+    And I set the "Product_id" to "1"
+    And I set the "Quantity" to "5"
+    And I set the "Restock_level" to "0"
+    And I select "New" in the "Condition" dropdown
+    And I select "True" in the "Available" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+
+    When I copy the "Product_id" field
+    And I press the "Clear" button
+    Then the "Product_id" field should be empty
+    Then the "Quantity" field should be empty
+    Then the "Restock_level" field should be empty
+
+    When I paste the "Product_id" field
+    And I select "New" in the "Condition" dropdown
+    And I press the "Retrieve" button
+    Then I should see "1" in the "Product_id" field
+    And I should see "New" in the "Condition" dropdown
+    And I should see "5" in the "Quantity" field
+    And I should see "0" in the "Restock_level" field
+    And I should see "True" in the "Available" dropdown
 
 Scenario: Get all Inventories
 

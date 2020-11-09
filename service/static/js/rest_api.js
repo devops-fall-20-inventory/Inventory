@@ -6,21 +6,31 @@ $(function () {
 
     // Updates the form with data from the response
     function update_form_data(res) {
-        $("#pet_id").val(res._id);
-        $("#pet_name").val(res.name);
-        $("#pet_category").val(res.category);
-        if (res.available == true) {
-            $("#pet_available").val("true");
+        console.log(res);
+        $("#inventory_product_id").val(res.product_id);
+        $("#inventory_quantity").val(res.quantity);
+        $("#inventory_restock_level").val(res.restock_level);
+        if (res.available == 1) {
+            $("#inventory_available").val("true");
         } else {
-            $("#pet_available").val("false");
+            $("#inventory_available").val("false");
+        }
+        if (res.condition == "new") {
+            $("#inventory_condition").val("new");
+        } else if (res.condition == "used") {
+            $("#inventory_condition").val("used");
+        } else {
+            $("#inventory_condition").val("open-box");
         }
     }
 
     /// Clears all form fields
     function clear_form_data() {
-        $("#pet_name").val("");
-        $("#pet_category").val("");
-        $("#pet_available").val("");
+        $("#inventory_product_id").val("");
+        $("#inventory_condition").val("");
+        $("#inventory_quantity").val("");
+        $("#inventory_restock_level").val("");
+        $("#inventory_available").val("");
     }
 
     // Updates the flash message area
@@ -30,125 +40,234 @@ $(function () {
     }
 
     // ****************************************
-    // Create a Pet
+    // Create a Inventory
     // ****************************************
 
     $("#create-btn").click(function () {
 
-        var name = $("#pet_name").val();
-        var category = $("#pet_category").val();
-        var available = $("#pet_available").val() == "true";
+        var pid = $("#inventory_product_id").val();
+        var qty = $("#inventory_quantity").val();
+        var lvl = $("#inventory_restock_level").val();
+        var cnd_val = $("#inventory_condition").val();
+        var cnd = "new";
+        if (cnd_val == "used")
+            cnd = "used"
+        else if (cnd_val == "open-box")
+            cnd = "open box";
+        var avl_val = $("#inventory_available").val("");
+        var avl = 1;
+        if (avl_val == "false")
+            avl = 0;
 
         var data = {
-            "name": name,
-            "category": category,
-            "available": available
+            "product_id": parseInt(pid),
+            "condition": cnd,
+            "quantity": parseInt(qty),
+            "restock_level": parseInt(lvl),
+            "available": avl
         };
 
-        var ajax = $.ajax({
-            type: "POST",
-            url: "/pets",
-            contentType: "application/json",
-            data: JSON.stringify(data),
-        });
-
-        ajax.done(function(res){
-            update_form_data(res)
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            flash_message(res.responseJSON.message)
-        });
+        if (pid && cnd && qty && lvl && avl) {
+            var ajax = $.ajax({
+                type: "POST",
+                url: "/inventory",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+            });
+            ajax.done(function(res) {
+                update_form_data(res);
+                flash_message("Success");
+            });
+            ajax.fail(function(res) {
+                flash_message(res.responseJSON.message);
+            });
+        }
+        else {
+            var msg = "All fields are necessary.\nProduct ID>0, Quantity>=0, Restock level>=0";
+            flash_message(msg);
+        }
     });
 
-
     // ****************************************
-    // Update a Pet
+    // Update a Inventory
     // ****************************************
 
     $("#update-btn").click(function () {
 
-        var pet_id = $("#pet_id").val();
-        var name = $("#pet_name").val();
-        var category = $("#pet_category").val();
-        var available = $("#pet_available").val() == "true";
+        var pid = $("#inventory_product_id").val();
+        var qty = $("#inventory_quantity").val();
+        var lvl = $("#inventory_restock_level").val();
+        var cnd_val = $("#inventory_condition").val();
+        var cnd = "new";
+        if (cnd_val == "used")
+            cnd = "used"
+        else if (cnd_val == "open-box")
+            cnd = "open box";
+        var avl_val = $("#inventory_available").val("");
+        var avl = 1;
+        if (avl_val == "false")
+            avl = 0;
 
         var data = {
-            "name": name,
-            "category": category,
-            "available": available
+            "quantity": parseInt(qty),
+            "restock_level": parseInt(lvl),
+            "available": avl
         };
 
-        var ajax = $.ajax({
+        if (pid && cnd) {
+            var ajax = $.ajax({
                 type: "PUT",
-                url: "/pets/" + pet_id,
+                url: "/inventory/" + pid + "/condition/" + cnd,
                 contentType: "application/json",
                 data: JSON.stringify(data)
-            })
-
-        ajax.done(function(res){
-            update_form_data(res)
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            flash_message(res.responseJSON.message)
-        });
-
+            });
+            ajax.done(function(res){
+                update_form_data(res)
+                flash_message("Success")
+            });
+            ajax.fail(function(res){
+                flash_message(res.responseJSON.message)
+            });
+        }
+        else {
+            flash_message('Product ID AND Condition is required')
+        }
     });
 
     // ****************************************
-    // Retrieve a Pet
+    // Retrieve an Inventory
     // ****************************************
 
     $("#retrieve-btn").click(function () {
 
-        var pet_id = $("#pet_id").val();
-
-        var ajax = $.ajax({
-            type: "GET",
-            url: "/pets/" + pet_id,
-            contentType: "application/json",
-            data: ''
-        })
-
-        ajax.done(function(res){
-            //alert(res.toSource())
-            update_form_data(res)
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            clear_form_data()
-            flash_message(res.responseJSON.message)
-        });
-
+        var pid = $("#inventory_product_id").val();
+        var cnd_val = $("#inventory_condition").val();
+        var cnd = "new";
+        if (cnd_val == "used")
+            cnd = "used"
+        else if (cnd_val == "open-box")
+            cnd = "open box";
+        if (pid && cnd) {
+            var ajax = $.ajax({
+                type: "GET",
+                url: "/inventory/" + pid + "/condition/" + cnd,
+                contentType: "application/json",
+                data: ''
+            })
+            ajax.done(function(res) {
+                update_form_data(res)
+                flash_message("Success")
+            });
+            ajax.fail(function(res){
+                clear_form_data()
+                flash_message(res.responseJSON.message)
+            });
+        }
+        else {
+            flash_message('Product ID AND Condition is required')
+        }
     });
 
     // ****************************************
-    // Delete a Pet
+    // Search for a collection of Inventories
+    // ****************************************
+
+    /*$("#search-btn").click(function () {
+
+        var pid = $("#inventory_product_id").val();
+        var qty = $("#inventory_quantity").val();
+        var cnd_val = $("#inventory_condition").val();
+        var cnd = "new";
+        if (cnd_val == "used")
+            cnd = "used"
+        else if (cnd_val == "open-box")
+            cnd = "open box";
+
+        var queryString = "";
+        if (pid) {
+            queryString += 'product_id=' + name
+        }
+        if (qty) {
+            queryString += 'quantity=' + qty;
+            if (queryString.length == 0)
+                queryString = '&' + queryString
+        }
+        if (cnd) {
+            queryString += 'condition=' + cnd;
+            if (queryString.length == 0)
+                queryString = '&' + queryString
+        }
+
+        var ajax = $.ajax({
+            type: "GET",
+            url: "/inventory?" + queryString,
+            contentType: "application/json",
+            data: ''
+        });
+        ajax.done(function(res) {
+            //flash_message(res.toSource())
+            $("#search_results").empty();
+            $("#search_results").append('<table class="table-striped" cellpadding="10">');
+            var header = '<tr>'
+            header += '<th style="width:10%">Product ID</th>'
+            header += '<th style="width:40%">Condition</th>'
+            header += '<th style="width:40%">Quantity</th>'
+            header += '<th style="width:40%">Restock Level</th>'
+            header += '<th style="width:10%">Available</th></tr>'
+            $("#search_results").append(header);
+            var firstInv = "";
+            for(var i = 0; i < res.length; i++) {
+                var inv = res[i];
+                var row = "<tr><td>"+inv.product_id+"</td><td>"+inv.condition+"</td><td>"+inv.quantity+"</td><td>"+inv.restock_level+"</td><td>"+inv.available+"</td></tr>";
+                $("#search_results").append(row);
+                if (i == 0) {
+                    firstInv = inv;
+                }
+            }
+            $("#search_results").append('</table>');
+
+            // copy the first result to the form
+            if (firstInv != "")
+                update_form_data(firstInv)
+            flash_message("Success")
+        });
+        ajax.fail(function(res) {
+            flash_message(res.responseJSON.message)
+        });
+    });*/
+
+    // ****************************************
+    // Delete a Inventory
     // ****************************************
 
     $("#delete-btn").click(function () {
 
-        var pet_id = $("#pet_id").val();
+        var pid = $("#inventory_product_id").val();
+        var cnd_val = $("#inventory_condition").val();
+        var cnd = "new";
+        if (cnd_val == "used")
+            cnd = "used"
+        else if (cnd_val == "open-box")
+            cnd = "open box";
 
-        var ajax = $.ajax({
-            type: "DELETE",
-            url: "/pets/" + pet_id,
-            contentType: "application/json",
-            data: '',
-        })
-
-        ajax.done(function(res){
-            clear_form_data()
-            flash_message("Pet has been Deleted!")
-        });
-
-        ajax.fail(function(res){
-            flash_message("Server error!")
-        });
+        if (pid && cnd) {
+            var ajax = $.ajax({
+                type: "DELETE",
+                url: "/inventory/" + pid + "/condition/" + cnd,
+                contentType: "application/json",
+                data: '',
+            });
+            ajax.done(function(res) {
+                clear_form_data()
+                flash_message("Inventory has been Deleted!")
+            });
+            ajax.fail(function(res) {
+                flash_message("Server error!")
+            });
+        }
+        else {
+            flash_message('Product ID AND Condition is required')
+        }
     });
 
     // ****************************************
@@ -156,81 +275,8 @@ $(function () {
     // ****************************************
 
     $("#clear-btn").click(function () {
-        $("#pet_id").val("");
+        $("#inventory_product_id").val("");
         clear_form_data()
-    });
-
-    // ****************************************
-    // Search for a Pet
-    // ****************************************
-
-    $("#search-btn").click(function () {
-
-        var name = $("#pet_name").val();
-        var category = $("#pet_category").val();
-        var available = $("#pet_available").val() == "true";
-
-        var queryString = ""
-
-        if (name) {
-            queryString += 'name=' + name
-        }
-        if (category) {
-            if (queryString.length > 0) {
-                queryString += '&category=' + category
-            } else {
-                queryString += 'category=' + category
-            }
-        }
-        if (available) {
-            if (queryString.length > 0) {
-                queryString += '&available=' + available
-            } else {
-                queryString += 'available=' + available
-            }
-        }
-
-        var ajax = $.ajax({
-            type: "GET",
-            url: "/pets?" + queryString,
-            contentType: "application/json",
-            data: ''
-        })
-
-        ajax.done(function(res){
-            //alert(res.toSource())
-            $("#search_results").empty();
-            $("#search_results").append('<table class="table-striped" cellpadding="10">');
-            var header = '<tr>'
-            header += '<th style="width:10%">ID</th>'
-            header += '<th style="width:40%">Name</th>'
-            header += '<th style="width:40%">Category</th>'
-            header += '<th style="width:10%">Available</th></tr>'
-            $("#search_results").append(header);
-            var firstPet = "";
-            for(var i = 0; i < res.length; i++) {
-                var pet = res[i];
-                var row = "<tr><td>"+pet._id+"</td><td>"+pet.name+"</td><td>"+pet.category+"</td><td>"+pet.available+"</td></tr>";
-                $("#search_results").append(row);
-                if (i == 0) {
-                    firstPet = pet;
-                }
-            }
-
-            $("#search_results").append('</table>');
-
-            // copy the first result to the form
-            if (firstPet != "") {
-                update_form_data(firstPet)
-            }
-
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            flash_message(res.responseJSON.message)
-        });
-
     });
 
 })

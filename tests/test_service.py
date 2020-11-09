@@ -121,7 +121,7 @@ class InventoryAPITest(TestCase):
         resp = self.app.get(location, content_type="application/json")
         if new_inventory["available"]==1 and service.PERMISSION:
             self.assertEqual(resp.status_code, status.HTTP_200_OK)
-            new_inventory = resp.get_json()[0]
+            new_inventory = resp.get_json()
             self.assertTrue(new_inventory != None)
             self.assertEqual(new_inventory["product_id"],
                 test_inventory.serialize()['product_id'], "Product ID does not match")
@@ -221,7 +221,7 @@ class InventoryAPITest(TestCase):
                             content_type="application/json")
         if test_inventory.available==1 and service.PERMISSION:
             self.assertEqual(resp.status_code, status.HTTP_200_OK)
-            data = resp.get_json()[0]
+            data = resp.get_json()
             self.assertEqual(data["product_id"], pid)
             self.assertEqual(data["condition"], cnd)
         else:

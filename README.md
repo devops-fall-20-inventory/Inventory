@@ -9,9 +9,6 @@
 [![GitHub issues](https://img.shields.io/github/issues/devops-fall-20-inventory/inventories)](https://github.com/devops-fall-20-inventory/inventories/issues)
 [![GitHub closed issues](https://img.shields.io/github/issues-closed/devops-fall-20-inventory/inventories?color=g)](https://github.com/devops-fall-20-inventory/inventories/issues?q=is%3Aissue+is%3Aclosed)
 
-[![GitHub commits](https://img.shields.io/github/commit-activity/m/devops-fall-20-inventory/inventories)](https://github.com/devops-fall-20-inventory/inventories/commits)
-[![GitHub last commit](https://img.shields.io/github/last-commit/devops-fall-20-inventory/inventories?color=blue)](https://github.com/devops-fall-20-inventory/inventories/commit/master)
-
 ## Description
 This repository contains all the work of the Inventory Squad as part of the Fall '20 DevOps under [John Rofrano](https://github.com/rofrano).
 
@@ -39,17 +36,18 @@ The inventory resource keeps track of how many of each product we have in our wa
 
 ### API endpoints
 
-| Method | URI | Description |
-| --- | --- | --- |
-| `POST` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory` | Given the data body this creates an inventory record in the DB |
-| `GET` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory` | Returns a collection of all inventories in the DB |
-| `GET` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory?product_id=<int>` | Returns a collection of all inventories matching `product_id` |
-| `GET` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>` | Returns the inventory record with the given `product_id` and `condition` |
-| `PUT` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>` | Updates the inventory record with the given `product_id` and `condition` |
-| `PUT` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/activate` | Given the `product_id` and `condition` this updates `available = 1` |
-| `PUT` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/deactivate` | Given the `product_id` and `condition` this updates `available = 0` |
-| `PUT` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/restock` | Given the `product_id`, `condition` and `amount` (body) this updates `quantity += amount` |
-| `DELETE` | `/inventory/<int:product_id>/condition/<string:condition>` | Given the `product_id` and `condition` this updates `available = 0` |
+| Method | URI | Description | Content-Type | Sample Payload |
+| --- | --- | ------ | --- | ------- |
+| `POST` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory` | Given the data body this creates an inventory record in the DB | application/json | <code>{<br>&nbsp;&nbsp;"product_id": 321,<br>&nbsp;&nbsp;"condition": "new",<br>&nbsp;&nbsp;"available": 1,<br>&nbsp;&nbsp;"quantity": 2,<br>&nbsp;&nbsp;"restock_level": 1<br>&nbsp;}<code> |
+| `GET` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory` | Returns a collection of all inventories in the DB | N/A | N/A |
+| `GET` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory?product_id=<int>` | Returns a collection of all inventories matching `product_id` | N/A | N/A |
+| `GET` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>` | Returns the inventory record with the given `product_id` and `condition` | N/A | N/A |
+| `PUT` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>` | Updates the inventory record with the given `product_id` and `condition` | application/json | <code>{<br>&nbsp;&nbsp;"available": 1,<br>&nbsp;&nbsp;"quantity": 2,<br>&nbsp;&nbsp;"restock_level": 1<br>&nbsp;}<code> |
+| `PUT` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/activate` | Given the `product_id` and `condition` this updates `available = 1` | N/A | N/A |
+| `PUT` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/deactivate` | Given the `product_id` and `condition` this updates `available = 0` | N/A | N/A |
+| `PUT` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/restock` | Given the `product_id`, `condition` and `amount` (body) this updates `quantity += amount` | application/json | `{"amount": 2}` |
+| `DELETE` | `/inventory/<int:product_id>/condition/<string:condition>` | Given the `product_id` and `condition` this updates `available = 0` | N/A | N/A |
+
 
 ### Testing and Running locally
 

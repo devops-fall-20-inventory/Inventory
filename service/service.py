@@ -101,7 +101,7 @@ def get_inventory_by_pid_condition(product_id, condition):
         return not_found("Inventory ({}, {})".format(product_id, condition))
     app.logger.info("Return inventory with product_id {} and condition {}"\
                     .format(product_id, condition))
-    return make_response(jsonify([inventory.serialize()]), status.HTTP_200_OK)
+    return make_response(jsonify(inventory.serialize()), status.HTTP_200_OK)
 
 ################################################################################
 # POST
