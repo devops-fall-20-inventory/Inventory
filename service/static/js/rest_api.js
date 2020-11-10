@@ -6,7 +6,6 @@ $(function () {
 
     // Updates the form with data from the response
     function update_form_data(res) {
-        console.log(res);
         $("#inventory_product_id").val(res.product_id);
         $("#inventory_quantity").val(res.quantity);
         $("#inventory_restock_level").val(res.restock_level);
@@ -172,35 +171,40 @@ $(function () {
     // Search for a collection of Inventories
     // ****************************************
 
-    /*$("#search-btn").click(function () {
+    $("#search-btn").click(function () {
 
+        console.log("searching...");
         var pid = $("#inventory_product_id").val();
-        var qty = $("#inventory_quantity").val();
-        var cnd_val = $("#inventory_condition").val();
-        var cnd = "new";
-        if (cnd_val == "used")
-            cnd = "used"
-        else if (cnd_val == "open-box")
-            cnd = "open box";
+        // var qty = $("#inventory_quantity").val();
+        // var cnd_val = $("#inventory_condition").val();
+        // var cnd = "new";
+        // if (cnd_val == "used")
+        //     cnd = "used"
+        // else if (cnd_val == "open-box")
+        //     cnd = "open box";
 
-        var queryString = "";
+        var query = "";
         if (pid) {
-            queryString += 'product_id=' + name
+            query += 'product_id=' + pid
         }
-        if (qty) {
-            queryString += 'quantity=' + qty;
-            if (queryString.length == 0)
-                queryString = '&' + queryString
-        }
-        if (cnd) {
-            queryString += 'condition=' + cnd;
-            if (queryString.length == 0)
-                queryString = '&' + queryString
-        }
+        // if (qty) {
+        //     query += 'quantity=' + qty;
+        //     if (query.length == 0)
+        //         query = '&' + query
+        // }
+        // if (cnd) {
+        //     query += 'condition=' + cnd;
+        //     if (query.length == 0)
+        //         query = '&' + query
+        // }
+        var url = "/inventory";
+        if (query && query.length > 0)
+            url = url + "?" + query;
+        console.log(url);
 
         var ajax = $.ajax({
             type: "GET",
-            url: "/inventory?" + queryString,
+            url: url,
             contentType: "application/json",
             data: ''
         });
@@ -234,7 +238,7 @@ $(function () {
         ajax.fail(function(res) {
             flash_message(res.responseJSON.message)
         });
-    });*/
+    });
 
     // ****************************************
     // Delete a Inventory
