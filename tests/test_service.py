@@ -119,22 +119,22 @@ class InventoryAPITest(TestCase):
 
         # Check that the location header was correct
         resp = self.app.get(location, content_type="application/json")
-        if new_inventory["available"]==1 and service.PERMISSION:
-            self.assertEqual(resp.status_code, status.HTTP_200_OK)
-            new_inventory = resp.get_json()
-            self.assertTrue(new_inventory != None)
-            self.assertEqual(new_inventory["product_id"],
-                test_inventory.serialize()['product_id'], "Product ID does not match")
-            self.assertEqual(new_inventory["quantity"],
-                test_inventory.serialize()['quantity'], "Quantity does not match")
-            self.assertEqual(new_inventory["restock_level"],
-                test_inventory.serialize()['restock_level'], "Restock level does not match")
-            self.assertEqual(new_inventory["available"],
-                test_inventory.serialize()['available'], "Availability does not match")
-            self.assertEqual(new_inventory["condition"],
-                test_inventory.serialize()['condition'], "Conditions do not match")
-        else:
-            self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        # if new_inventory["available"]==1 and service.PERMISSION:
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        new_inventory = resp.get_json()
+        self.assertTrue(new_inventory != None)
+        self.assertEqual(new_inventory["product_id"],
+            test_inventory.serialize()['product_id'], "Product ID does not match")
+        self.assertEqual(new_inventory["quantity"],
+            test_inventory.serialize()['quantity'], "Quantity does not match")
+        self.assertEqual(new_inventory["restock_level"],
+            test_inventory.serialize()['restock_level'], "Restock level does not match")
+        self.assertEqual(new_inventory["available"],
+            test_inventory.serialize()['available'], "Availability does not match")
+        self.assertEqual(new_inventory["condition"],
+            test_inventory.serialize()['condition'], "Conditions do not match")
+        # else:
+            # self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_create_inventory_bad_req(self):
         """ Create a new inventory WITHOUT condition """
@@ -197,10 +197,10 @@ class InventoryAPITest(TestCase):
             for p in PERMS:
                 set_permissions(p)
                 resp = self.app.get("/inventory?product_id={}".format(test_pid), content_type="application/json")
-                if inv.available == 1:
-                    self.assertEqual(resp.status_code, status.HTTP_200_OK)
-                else:
-                    self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+                # if inv.available == 1:
+                self.assertEqual(resp.status_code, status.HTTP_200_OK)
+                # else:
+                    # self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_inventory_by_pid_2(self):
         """Get inventory details by [product_id]"""
@@ -219,13 +219,13 @@ class InventoryAPITest(TestCase):
         cnd = test_inventory.condition
         resp = self.app.get("/inventory/{}/condition/{}".format(pid, cnd),\
                             content_type="application/json")
-        if test_inventory.available==1 and service.PERMISSION:
-            self.assertEqual(resp.status_code, status.HTTP_200_OK)
-            data = resp.get_json()
-            self.assertEqual(data["product_id"], pid)
-            self.assertEqual(data["condition"], cnd)
-        else:
-            self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        # if test_inventory.available==1 and service.PERMISSION:
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["product_id"], pid)
+        self.assertEqual(data["condition"], cnd)
+        # else:
+            # self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_inventory_by_pid_condition_404(self):
         """Get inventory details by [product_id, condition] 404"""

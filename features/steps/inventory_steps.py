@@ -182,6 +182,38 @@ def step_impl(context, element_value, element_name):
 ####################################################################################################
 # Scenario: Activate an Inventory
 ####################################################################################################
+@when('I change the "{element_name}" dropdown to "{text_string}"')
+def step_impl(context, element_name, text_string):
+    element_id = ID_PREFIX + element_name.lower()
+    # element = context.driver.find_element_by_id(element_id)
+    element = WebDriverWait(context.driver, WAIT_SECONDS).until(
+        expected_conditions.presence_of_element_located((By.ID, element_id))
+    )
+    #element.clear()
+    element = Select(element)
+    element.select_by_visible_text(text_string)
+
+@then('I should see "{name}" with availability set to "{available}" in the results')
+def step_impl(context, name, available):
+    # element = context.driver.find_element_by_id('search_results')
+    # expect(element.text).to_contain(name)
+    found = WebDriverWait(context.driver, WAIT_SECONDS).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, 'search_results'),
+            name
+        ) and
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, 'search_results'),
+            available
+        )
+    )
+    expect(found).to_be(True)
+
+@then('I should not see "{name}" with availability set to "{available}" in the results')
+def step_impl(context, name, available):
+    element = context.driver.find_element_by_id('search_results')
+    error_msg = "I should not see '%s' in '%s' with availability set to '%s'" % (name, element.text, available)
+    ensure((name in element.text and available in element.text), False, error_msg)
 
 ####################################################################################################
 # Scenario: Deactivate an Inventory

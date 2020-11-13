@@ -79,8 +79,8 @@ def list_inventories():
     results = []
     for inv in inventories:
         json = inv.serialize()
-        if json['available'] == 1:
-            results.append(json)
+        # if json['available'] == 1:
+        results.append(json)
 
     if len(results) == 0:
         return not_found("Inventories were not found for this permission")
@@ -96,8 +96,9 @@ def get_inventory_by_pid_condition(product_id, condition):
     app.logger.info("A GET request for inventories with product_id {} and condition {}"\
                     .format(product_id, condition))
     inventory = Inventory.find(product_id, condition)
-    if (not inventory) or\
-        (inventory and inventory.serialize()['available'] == 0):
+    # if (not inventory) or\
+        # (inventory and inventory.serialize()['available'] == 0):
+    if not inventory:
         return not_found("Inventory ({}, {})".format(product_id, condition))
     app.logger.info("Return inventory with product_id {} and condition {}"\
                     .format(product_id, condition))
