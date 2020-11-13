@@ -64,24 +64,21 @@ Scenario: Create an Inventory
     And I should see "0" in the "Restock_level" field
     And I should see "False" in the "Available" dropdown
 
-
 Scenario: Get all Inventories
 
 Scenario: Get a specific Inventory
 
 Scenario: Get a collection of Inventories with a Request parameter
 
-Scenario: Delete an Inventory
-
 Scenario: Update an Inventory
 
-Scenario: Update an Inventory's stock
+Scenario: Restock an Inventory
 
 Scenario: Activate an Inventory
 
     When I visit the "Home Page"
     And I set the "Product_id" to "10"
-    And I set the "Quantity" to "0"
+    And I set the "Quantity" to "1"
     And I set the "Restock_level" to "0"
     And I select "New" in the "Condition" dropdown
     And I select "False" in the "Available" dropdown
@@ -89,17 +86,16 @@ Scenario: Activate an Inventory
     Then I should see the message "Success"
 
     When I change the "Available" dropdown to "True"
-    And I press the "Update" button
+    And I press the "Activate" button
     Then I should see the message "Success"
 
     When I copy the "Product_id" field
-    And I select "New" in the "Condition" dropdown
     And I press the "Clear" button
     And I paste the "Product_id" field
+    And I select "New" in the "Condition" dropdown
     And I press the "Retrieve" button
     Then I should see "10" in the "Product_id" field
     And I should see "True" in the "Available" dropdown
-
 
 Scenario: Deactivate an Inventory
 
@@ -111,7 +107,7 @@ Scenario: Deactivate an Inventory
     And I should see "True" in the "Available" dropdown
 
     When I select "False" in the "Available" dropdown
-    And I press the "Update" button
+    And I press the "Deactivate" button
     Then I should see the message "Success"
 
     When I copy the "Product_id" field
@@ -121,3 +117,5 @@ Scenario: Deactivate an Inventory
     And I press the "Retrieve" button
     Then I should see "963" in the "Product_id" field
     And I should see "False" in the "Available" dropdown
+
+Scenario: Delete an Inventory

@@ -36,7 +36,6 @@ from service.error_handlers import *
 from . import app
 
 DEMO_MSG = "Inventory REST API Service"
-PERMISSION = True
 
 ################################################################################
 # INDEX
@@ -83,8 +82,8 @@ def list_inventories():
         results.append(json)
 
     if len(results) == 0:
-        return not_found("Inventories were not found for this permission")
-    app.logger.info("Returning {} inventories for this permission type".format(len(results)))
+        return not_found("Inventories were not found")
+    app.logger.info("Returning {} inventories".format(len(results)))
     return make_response(jsonify(results), status.HTTP_200_OK)
 
 @app.route("/inventory/<int:product_id>/condition/<string:condition>", methods=["GET"])
@@ -115,8 +114,6 @@ def create_inventory():
     """
     app.logger.info("Request to create an Inventory record")
     check_content_type("application/json")
-    if not PERMISSION:
-        return bad_request("You do not have permissions to CREATE")
     json = request.get_json()
     inventory = Inventory()
     inventory.deserialize(json)
@@ -140,8 +137,6 @@ def create_inventory():
 @app.route("/inventory/<int:product_id>/condition/<string:condition>", methods=["DELETE"])
 def delete_inventory(product_id, condition):
     """Deletes an inventory with the given product_id and condition"""
-    if not PERMISSION:
-        return bad_request("You do not have permissions to DELETE")
     app.logger.info("Request to delete inventory with key ({}, {})"\
                     .format(product_id, condition))
     inventory = Inventory.find(product_id, condition)
@@ -160,8 +155,6 @@ def update_inventory(product_id, condition):
     Regular Update
     Updates the inventory with the given product_id and condition
     """
-    if not PERMISSION:
-        return bad_request("You do not have permissions to UPDATE")
     app.logger.info("Request to update inventory with key ({}, {})"\
                     .format(product_id, condition))
     check_content_type("application/json")
@@ -187,8 +180,6 @@ def update_inventory(product_id, condition):
 @app.route("/inventory/<int:product_id>/condition/<string:condition>/restock", methods=["PUT"])
 def update_inventory_restock(product_id, condition):
     """- Given the product_id, condition and amount (body) this updates quantity += amount"""
-    if not PERMISSION:
-        return bad_request("You do not have permissions to RESTOCK")
     app.logger.info("Request to update inventory with key ({}, {})"\
                     .format(product_id, condition))
 
@@ -221,8 +212,6 @@ def update_inventory_restock(product_id, condition):
 @app.route("/inventory/<int:product_id>/condition/<string:condition>/activate", methods=["PUT"])
 def update_inventory_activate(product_id, condition):
     """Given the product_id and condition this updates available = 1"""
-    if not PERMISSION:
-        return bad_request("You do not have permissions to ACTIVATE")
     app.logger.info("Request to update inventory with key ({}, {})"\
                     .format(product_id, condition))
     inventory = Inventory.find(product_id, condition)
@@ -241,8 +230,6 @@ def update_inventory_activate(product_id, condition):
 @app.route("/inventory/<int:product_id>/condition/<string:condition>/deactivate", methods=["PUT"])
 def update_inventory_deactivate(product_id, condition):
     """Given the product_id and condition this updates available = 0"""
-    if not PERMISSION:
-        return bad_request("You do not have permissions to DEACTIVATE")
     app.logger.info("Request to update inventory with key ({}, {})"\
                     .format(product_id, condition))
     inventory = Inventory.find(product_id, condition)
@@ -269,8 +256,3 @@ def check_content_type(content_type):
         return
     app.logger.error("Invalid Content-Type: {}".format(request.headers["Content-Type"]))
     abort(415, "Content-Type must be {}".format(content_type))
-
-def set_permissions(perm):
-    """ Sets the Permission """
-    global PERMISSION
-    PERMISSION = perm

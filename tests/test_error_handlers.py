@@ -12,20 +12,17 @@ from werkzeug import test
 from werkzeug.wrappers import Response
 from flask_api import status
 from service import app, service, error_handlers
-from service.service import app, init_db, set_permissions
+from service.service import app, init_db
 from service.model import Inventory, DataValidationError, DB, DBError
 from service.error_handlers import method_not_supported, internal_server_error
 from .inventory_factory import InventoryFactory
 
 DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres")
 
-PERMS = [True, False]
-BASE = service.PERMISSION
-
 class InventoryErrTest(TestCase):
     """
     ######################################################################
-    Inventory Error Handlers Tests 
+    Inventory Error Handlers Tests
     ######################################################################
     """
 
@@ -64,7 +61,6 @@ class InventoryErrTest(TestCase):
     @patch('service.service.create_inventory')
     def test_415(self, mock_415):
         """Testing HTTP_415_UNSUPPORTED_MEDIA_TYPE error"""
-        set_permissions(BASE)
         resp = self.app.post("/inventory", json="", content_type="text")
         self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
