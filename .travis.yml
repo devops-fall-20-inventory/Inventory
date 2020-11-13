@@ -28,7 +28,7 @@ before_script:
 
 script:
     - nosetests
-    - behave
+    # - behave
 
 after_success:
     - codecov
