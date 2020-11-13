@@ -21,7 +21,7 @@ Scenario: Create an Inventory
     And I set the "Quantity" to "5"
     And I set the "Restock_level" to "0"
     And I select "New" in the "Condition" dropdown
-    And I select "True" in the "Available" dropdown
+    And I select "False" in the "Available" dropdown
     And I press the "Create" button
     Then I should see the message "Success"
 
@@ -38,7 +38,7 @@ Scenario: Create an Inventory
     And I should see "New" in the "Condition" dropdown
     And I should see "5" in the "Quantity" field
     And I should see "0" in the "Restock_level" field
-    And I should see "True" in the "Available" dropdown
+    And I should see "False" in the "Available" dropdown
 
     When I visit the "Home Page"
     And I set the "Product_id" to "2"

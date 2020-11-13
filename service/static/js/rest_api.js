@@ -53,7 +53,7 @@ $(function () {
             cnd = "used"
         else if (cnd_val == "open-box")
             cnd = "open box";
-        var avl_val = $("#inventory_available").val("");
+        var avl_val = $("#inventory_available").val();
         var avl = 1;
         if (avl_val == "false")
             avl = 0;
@@ -66,7 +66,7 @@ $(function () {
             "available": avl
         };
 
-        if (pid && cnd && qty && lvl && avl) {
+        if (pid && cnd && qty>=0 && lvl>=0 && avl>=0) {
             var ajax = $.ajax({
                 type: "POST",
                 url: "/inventory",
@@ -102,7 +102,7 @@ $(function () {
             cnd = "used"
         else if (cnd_val == "open-box")
             cnd = "open box";
-        var avl_val = $("#inventory_available").val("");
+        var avl_val = $("#inventory_available").val();
         var avl = 1;
         if (avl_val == "false")
             avl = 0;
@@ -146,7 +146,7 @@ $(function () {
             cnd = "used"
         else if (cnd_val == "open-box")
             cnd = "open box";
-        if (pid && cnd) {
+        if (pid && cnd!=undefined) {
             var ajax = $.ajax({
                 type: "GET",
                 url: "/inventory/" + pid + "/condition/" + cnd,
