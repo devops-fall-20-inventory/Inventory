@@ -5,18 +5,19 @@ Package for the application model and services
 This module also sets up the logging to be used with gunicorn
 """
 import os
+import sys
 import logging
 from flask import Flask
-from . import keys
 
 # Create Flask application
 app = Flask(__name__)
+
 app.config.from_object("config")
 app.config['LOGGING_LEVEL'] = logging.INFO
-app.config[keys.KEY_API] = os.getenv(keys.KEY_API)
+app.config['API_KEY'] = os.getenv('API_KEY')
 
 # Import the service After the Flask app is created
-from . import routes, model
+from service import routes, keys
 
 # Set up logging for production
 print("Setting up logging for {}...".format(__name__))

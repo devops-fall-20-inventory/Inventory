@@ -4,7 +4,6 @@ Test Factory to make fake objects for testing
 import sys
 import factory
 import factory.fuzzy as fuzzy
-sys.path.append("..")
 from service import keys
 from service.model import Inventory
 

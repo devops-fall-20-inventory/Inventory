@@ -38,7 +38,7 @@ authorizations = {
     'apikey': {
         'type': 'apiKey',
         'in': 'header',
-        'name': 'X-Api-Key'
+        'name': keys.KEY_API_HEADER
     }
 }
 
@@ -92,7 +92,7 @@ def token_required(f):
         token = None
         if keys.KEY_API_HEADER in request.headers:
             token = request.headers[keys.KEY_API_HEADER]
-        if app.config.get(keys.KEY_API) and app.config[keys.KEY_API] == token:
+        elif app.config.get(keys.KEY_API) and app.config[keys.KEY_API] == token:
             return f(*args, **kwargs)
         return {'message': 'Invalid or missing token'}, status.HTTP_401_UNAUTHORIZED
     return decorated
@@ -108,7 +108,7 @@ def generate_apikey():
 @app.before_first_request
 def init_db(dbname=keys.KEY_DB_NAME):
     """ Initlaize the model """
-    Inventory.init_db(dbname)
+    Inventory.init_db(app)
 
 ####################################################################################################
 # INDEX
@@ -117,7 +117,8 @@ def init_db(dbname=keys.KEY_DB_NAME):
 def index():
     """ Root URL response """
     app.logger.info("Request for Root URL")
-    return render_template('index.html')
+    return app.send_static_file('index.html')
+    # return render_template('index.html')
 
 ####################################################################################################
 #  PATH: /inventory
@@ -160,7 +161,7 @@ class InventoryBase(Resource):
     @api.response(status.HTTP_400_BAD_REQUEST, 'The posted data was not valid')
     @api.response(status.HTTP_201_CREATED, 'Inventory created successfully')
     @api.marshal_with(inventory_model, code=status.HTTP_201_CREATED)
-    @token_required
+    # @token_required
     def post(self):
         """
         Creates a Inventory
@@ -225,7 +226,7 @@ class InventoryResource(Resource):
     @api.response(status.HTTP_400_BAD_REQUEST, 'The posted Inventory data was not valid')
     @api.expect(inventory_model)
     @api.marshal_with(inventory_model)
-    @token_required
+    # @token_required
     def put(self, product_id, condition):
         """
         Update an Inventory
@@ -255,7 +256,7 @@ class InventoryResource(Resource):
     #------------------------------------------------------------------
     @api.doc('delete_inventory', security='apikey')
     @api.response(status.HTTP_204_NO_CONTENT, 'Inventory deleted')
-    @token_required
+    # @token_required
     def delete(self, product_id, condition):
         """
         Delete a Inventory
@@ -288,7 +289,7 @@ class InventoryResourceRestock(Resource):
     @api.response(status.HTTP_400_BAD_REQUEST, 'The posted body was invalid. Please check again.')
     @api.expect(restock_model)
     @api.marshal_with(inventory_model)
-    @token_required
+    # @token_required
     def put(self, product_id, condition):
         """
         Restock an Inventory's Quantity
@@ -334,7 +335,7 @@ class InventoryResourceActivate(Resource):
     @api.doc('update_inventory', security='apikey')
     @api.response(status.HTTP_404_NOT_FOUND, 'Inventory not found')
     @api.marshal_with(inventory_model)
-    @token_required
+    # @token_required
     def put(self, product_id, condition):
         """
         Restock an Inventory's Quantity
@@ -369,7 +370,7 @@ class InventoryResourceDeactivate(Resource):
     @api.doc('update_inventory', security='apikey')
     @api.response(status.HTTP_404_NOT_FOUND, 'Inventory not found')
     @api.marshal_with(inventory_model)
-    @token_required
+    # @token_required
     def put(self, product_id, condition):
         """
         Restock an Inventory's Quantity

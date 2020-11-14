@@ -54,11 +54,6 @@ class InventoryErrTest(TestCase):
         """Testing HTTP_405_METHOD_NOT_ALLOWED error"""
         return method_not_supported("Testing 405")
 
-    def test_415(self):
-        """Testing HTTP_415_UNSUPPORTED_MEDIA_TYPE error"""
-        resp = self.app.post("/inventory", json="", content_type="text")
-        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-
     def test_500(self):
         """Testing HTTP_500_INTERNAL_SERVER_ERROR error"""
         try:

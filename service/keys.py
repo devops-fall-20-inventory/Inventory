@@ -6,6 +6,7 @@ The generic variables for ALL the programs
 DATABASE_URI_LOCAL = "postgres://postgres:postgres@localhost:5432/postgres"
 KEY_DB_URI="DATABASE_URI"
 KEY_SQL_ALC="SQLALCHEMY_DATABASE_URI"
+KET_SECRET="SECRET_KEY"
 
 # service.py
 DEMO_MSG = "Inventory REST API Service"
@@ -22,7 +23,7 @@ KEY_CONTENT_TYPE_JSON="application/json"
 KEY_API_HEADER = 'X-Api-Key'
 KEY_API = 'API_KEY'
 INV_TITLE = "Inventory REST API Service"
-INV_DESCR = "This is aN Inventory E-Commerce server."
+INV_DESCR = "This is an Inventory E-Commerce server."
 INV_LABEL = "Inventory shop operations"
 
 # model.py

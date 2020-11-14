@@ -6,7 +6,6 @@ import os
 import sys
 import unittest
 
-sys.path.append("..")
 from service import app, model, keys
 from service.model import Inventory, DB, DataValidationError, DBError
 from .inventory_factory import InventoryFactory
@@ -72,7 +71,7 @@ class InventoryTest(unittest.TestCase):
         self.assertIsNot(data, None)
         self.assertTrue(len(data)>0)
         for row in data:
-            if len(row)<model.MAX_ATTR+1:
+            if len(row)<keys.MAX_ATTR+1:
                 continue
             self.call_serialize(row[0],row[1],row[2],row[3],row[4],row[5])
 
@@ -101,7 +100,7 @@ class InventoryTest(unittest.TestCase):
         self.assertIsNot(data, None)
         self.assertTrue(len(data)>0)
         for row in data:
-            if len(row)<model.MAX_ATTR+1:
+            if len(row)<keys.MAX_ATTR+1:
                 continue
             self.call_deserialize(row[0],row[1],row[2],row[3],row[4],row[5])
 
@@ -175,7 +174,7 @@ class InventoryTest(unittest.TestCase):
         self.assertIsNot(data, None)
         self.assertTrue(len(data)>0)
         for row in data:
-            if len(row)<model.MAX_ATTR+1:
+            if len(row)<keys.MAX_ATTR+1:
                 continue
             self.call_create(row[0],row[1],row[2],row[3],row[4],row[5])
 

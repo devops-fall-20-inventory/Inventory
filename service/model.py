@@ -38,11 +38,11 @@ class Inventory(DB.Model):
     def serialize(self):
         """ Serializes an Inventory record into a dictionary """
         return {
-            "product_id": self.product_id,
-            "quantity": self.quantity,
-            "restock_level": self.restock_level,
-            "condition": self.condition,
-            "available": self.available
+            keys.KEY_PID: self.product_id,
+            keys.KEY_QTY: self.quantity,
+            keys.KEY_LVL: self.restock_level,
+            keys.KEY_CND: self.condition,
+            keys.KEY_AVL: self.available
         }
 
     # Args: data (dict): A dictionary containing the resource data
@@ -54,11 +54,11 @@ class Inventory(DB.Model):
             self.restock_level = data[keys.KEY_LVL]
             self.condition = data[keys.KEY_CND]
             self.available = data[keys.KEY_AVL]
+            return self
         except KeyError as error:
             raise DataValidationError("Invalid Inventory record: missing " + error.args[0])
         except TypeError as error:
             raise DataValidationError("Invalid Inventory record: body contained bad or no data")
-        return self
 
     @classmethod
     def init_db(cls, app):
@@ -66,6 +66,7 @@ class Inventory(DB.Model):
         try:
             LOGGER.info("Initializing database")
             cls.app = app
+
             # This is where we initialize SQLAlchemy from the Flask app
             DB.init_app(app)
             app.app_context().push()
