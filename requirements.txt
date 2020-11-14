@@ -2,7 +2,9 @@
 Flask==1.1.2
 Flask-API==2.0
 Flask-SQLAlchemy==2.4.1
+flask-restplus==0.13.0
 psycopg2-binary==2.8.4
+Werkzeug==0.16.1
 
 # Runtime
 gunicorn==20.0.2
