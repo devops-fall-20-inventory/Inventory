@@ -4,28 +4,11 @@ All of the models are stored in this module
 """
 import logging
 from flask_sqlalchemy import SQLAlchemy, sqlalchemy
-
+from service import keys
 LOGGER = logging.getLogger("flask.app")
 
 # Create the SQLAlchemy object to be initialized later in init_db()
 DB = SQLAlchemy()
-
-# Constants
-CONDITIONS = ["new", "used", "open box"]
-AVAILABLE_TRUE = 1
-AVAILABLE_FALSE = 0
-QTY_LOW = 0
-QTY_HIGH = 50
-QTY_STEP = 1
-RESTOCK_LVL = 50
-MAX_ATTR = 5
-
-ATTR_DEFAULT = 0
-ATTR_PRODUCT_ID = 1
-ATTR_CONDITION = 2
-ATTR_QUANTITY = 3
-ATTR_RESTOCK_LEVEL = 4
-ATTR_AVAILABLE = 5
 
 class DataValidationError(Exception):
     """ Used for an data validation errors when deserializing """
@@ -66,11 +49,11 @@ class Inventory(DB.Model):
     def deserialize(self, data):
         """ Deserializes an Inventory record from a dictionary """
         try:
-            self.product_id = data["product_id"]
-            self.quantity = data["quantity"]
-            self.restock_level = data["restock_level"]
-            self.condition = data["condition"]
-            self.available = data["available"]
+            self.product_id = data[keys.KEY_PID]
+            self.quantity = data[keys.KEY_QTY]
+            self.restock_level = data[keys.KEY_LVL]
+            self.condition = data[keys.KEY_CND]
+            self.available = data[keys.KEY_AVL]
         except KeyError as error:
             raise DataValidationError("Invalid Inventory record: missing " + error.args[0])
         except TypeError as error:
@@ -140,7 +123,7 @@ class Inventory(DB.Model):
         validating Condition format
         """
         cnd = self.condition
-        return isinstance(cnd, str) and cnd in CONDITIONS
+        return isinstance(cnd, str) and cnd in keys.CONDITIONS
 
     def validate_data_quantity(self):
         """
@@ -148,8 +131,8 @@ class Inventory(DB.Model):
         """
         qty = self.quantity
         if isinstance(qty, str):
-            return qty.isdigit() and int(qty) >= QTY_LOW and int(qty) <= QTY_HIGH
-        return isinstance(qty, int) and qty >= QTY_LOW and qty <= QTY_HIGH
+            return qty.isdigit() and (keys.QTY_LOW <= int(qty) <= keys.QTY_HIGH)
+        return isinstance(qty, int) and (keys.QTY_LOW <= qty <= keys.QTY_HIGH)
 
     def validate_data_restock_level(self):
         """
@@ -157,8 +140,8 @@ class Inventory(DB.Model):
         """
         lvl = self.restock_level
         if isinstance(lvl, str):
-            return lvl.isdigit() and int(lvl) >= QTY_LOW and int(lvl) <= RESTOCK_LVL
-        return isinstance(lvl, int) and (lvl >= QTY_LOW and lvl <= RESTOCK_LVL)
+            return lvl.isdigit() and (keys.QTY_LOW <= int(lvl) <= keys.RESTOCK_LVL)
+        return isinstance(lvl, int) and (keys.QTY_LOW <= lvl <= keys.RESTOCK_LVL)
 
     def validate_data_available(self):
         """
@@ -166,8 +149,8 @@ class Inventory(DB.Model):
         """
         avl = self.available
         if isinstance(avl, str):
-            return avl.isdigit() and int(avl) in [AVAILABLE_TRUE, AVAILABLE_FALSE]
-        return isinstance(avl, int) and avl in [AVAILABLE_TRUE, AVAILABLE_FALSE]
+            return avl.isdigit() and int(avl) in [keys.AVAILABLE_TRUE, keys.AVAILABLE_FALSE]
+        return isinstance(avl, int) and avl in [keys.AVAILABLE_TRUE, keys.AVAILABLE_FALSE]
 
     ######################################################################
     def create(self):

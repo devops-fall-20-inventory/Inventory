@@ -4,15 +4,14 @@ Test cases for Inventory Model
 """
 import os
 import sys
-import csv
-import logging
 import unittest
-from service import app
-import service.model as model
+
+sys.path.append("..")
+from service import app, model, keys
 from service.model import Inventory, DB, DataValidationError, DBError
 from .inventory_factory import InventoryFactory
 
-DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres")
+DATABASE_URI = os.getenv(keys.KEY_DB_URI, keys.DATABASE_URI_LOCAL)
 
 ################################################################################
 #  Inventory Model test cases
@@ -29,7 +28,7 @@ class InventoryTest(unittest.TestCase):
         """ These run once before Test suite """
         app.debug = False
         # Set up the test database
-        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
+        app.config[keys.KEY_SQL_ALC] = DATABASE_URI
         Inventory.init_db(app)
 
     @classmethod
@@ -49,7 +48,7 @@ class InventoryTest(unittest.TestCase):
         """ Test Inventory __repr__ """
         pid = 1234567
         inventory = Inventory(product_id=pid)
-        msg = inventory.__repr__()
+        inventory.__repr__()
 
     def tes_db_err(self):
         """Testing DB connection errors"""
@@ -57,10 +56,10 @@ class InventoryTest(unittest.TestCase):
         uri_list = ["", "postgres://postgres:postgres@localhost:1234/cooldude"]
         for uri in uri_list:
             self.db_err(uri)
-        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
+        app.config[keys.KEY_SQL_ALC] = DATABASE_URI
 
     def db_err(self, uri):
-        app.config["SQLALCHEMY_DATABASE_URI"] = uri
+        app.config[keys.KEY_SQL_ALC] = uri
         self.assertRaises(DBError, Inventory.init_db, app)
 
     ######################################################################
@@ -78,21 +77,22 @@ class InventoryTest(unittest.TestCase):
             self.call_serialize(row[0],row[1],row[2],row[3],row[4],row[5])
 
     def call_serialize(self,pid,cnd,qty,lvl,avl,err):
-        inventory = Inventory(product_id=pid, condition=cnd, quantity=qty, restock_level=lvl, available=avl)
+        inventory = Inventory(product_id=pid, condition=cnd, quantity=qty,
+                                restock_level=lvl, available=avl)
         if err==1:
             self.assertRaises(DataValidationError, inventory.validate_data)
         data = inventory.serialize()
         self.assertNotEqual(data, None)
-        self.assertIn("product_id", data)
-        self.assertEqual(data["product_id"], pid)
-        self.assertIn("condition", data)
-        self.assertEqual(data["condition"], cnd)
-        self.assertIn("quantity", data)
-        self.assertEqual(data["quantity"], qty)
-        self.assertIn("restock_level", data)
-        self.assertEqual(data["restock_level"], lvl)
-        self.assertIn("available", data)
-        self.assertEqual(data["available"], avl)
+        self.assertIn(keys.KEY_PID, data)
+        self.assertEqual(data[keys.KEY_PID], pid)
+        self.assertIn(keys.KEY_CND, data)
+        self.assertEqual(data[keys.KEY_CND], cnd)
+        self.assertIn(keys.KEY_QTY, data)
+        self.assertEqual(data[keys.KEY_QTY], qty)
+        self.assertIn(keys.KEY_LVL, data)
+        self.assertEqual(data[keys.KEY_LVL], lvl)
+        self.assertIn(keys.KEY_AVL, data)
+        self.assertEqual(data[keys.KEY_AVL], avl)
 
     #
     def test_deserialize(self):
@@ -139,7 +139,8 @@ class InventoryTest(unittest.TestCase):
         self.call_validate_data("-1234567","new1","-1","-1","-1",False)
 
     def call_validate_data(self,pid,cnd,qty,lvl,avl,res):
-        inventory = Inventory(product_id=pid, condition=cnd, quantity=qty, restock_level=lvl, available=avl)
+        inventory = Inventory(product_id=pid, condition=cnd, quantity=qty,
+                                restock_level=lvl, available=avl)
         self.assertTrue(inventory != None)
         res_pid = inventory.validate_data_product_id()
         self.assertEqual(res_pid,res)
@@ -179,12 +180,13 @@ class InventoryTest(unittest.TestCase):
             self.call_create(row[0],row[1],row[2],row[3],row[4],row[5])
 
     def call_create(self,pid,cnd,qty,lvl,avl,err):
-        inventory = Inventory(product_id=pid, condition=cnd, quantity=qty, restock_level=lvl, available=avl)
+        inventory = Inventory(product_id=pid, condition=cnd, quantity=qty,
+                                restock_level=lvl, available=avl)
         if err==1:
             self.assertRaises(DataValidationError, inventory.validate_data)
         if not Inventory.find(inventory.product_id, inventory.condition):
             inventory.create()
-            self.assertTrue(inventory != None)
+            self.assertTrue(inventory is not None)
             self.assertTrue(inventory.product_id, int(pid))
             self.assertEqual(inventory.condition, cnd)
             self.assertEqual(inventory.quantity, int(qty))
@@ -194,7 +196,8 @@ class InventoryTest(unittest.TestCase):
     #
     def test_update(self):
         """Update an Inventory"""
-        inventory = Inventory(product_id=666, condition="new", quantity=1, restock_level=10, available=1)
+        inventory = Inventory(product_id=666, condition="new", quantity=1,
+                                restock_level=10, available=1)
         if not Inventory.find(inventory.product_id, inventory.condition):
             inventory.create()
         inventory.product_id = 667
@@ -206,7 +209,8 @@ class InventoryTest(unittest.TestCase):
     #
     def test_delete(self):
         """Delete an Inventory"""
-        inventory = Inventory(product_id=777, condition="new", quantity=1, restock_level=10, available=1)
+        inventory = Inventory(product_id=777, condition="new", quantity=1,
+                                restock_level=10, available=1)
         if not Inventory.find(inventory.product_id, inventory.condition):
             inventory.create()
         self.assertEqual(len(Inventory.all()), 1)
@@ -216,10 +220,12 @@ class InventoryTest(unittest.TestCase):
     #
     def test_find(self):
         """Find an Inventory by product_id and condition"""
-        inventory = Inventory(product_id=555, condition="new", quantity=1, restock_level=10, available=1)
+        inventory = Inventory(product_id=555, condition="new", quantity=1,
+                                restock_level=10, available=1)
         if not Inventory.find(inventory.product_id, inventory.condition):
             inventory.create()
-        inventory = Inventory(product_id=666, condition="new", quantity=1, restock_level=10, available=0)
+        inventory = Inventory(product_id=666, condition="new", quantity=1,
+                                restock_level=10, available=0)
         if not Inventory.find(inventory.product_id, inventory.condition):
             inventory.create()
         result = Inventory.find(inventory.product_id, inventory.condition)
@@ -232,10 +238,12 @@ class InventoryTest(unittest.TestCase):
 
     #
     def test_find_or_404(self):
-        inventory = Inventory(product_id=111, condition="new", quantity=1, restock_level=10, available=1)
+        inventory = Inventory(product_id=111, condition="new", quantity=1,
+                                restock_level=10, available=1)
         if not Inventory.find(inventory.product_id, inventory.condition):
             inventory.create()
-        inventory = Inventory(product_id=222, condition="new", quantity=1, restock_level=10, available=0)
+        inventory = Inventory(product_id=222, condition="new", quantity=1,
+                                restock_level=10, available=0)
         if not Inventory.find(inventory.product_id, inventory.condition):
             inventory.create()
         result = Inventory.find_or_404(inventory.product_id, inventory.condition)
@@ -248,10 +256,12 @@ class InventoryTest(unittest.TestCase):
 
     #
     def test_find_by_product_id(self):
-        inventory = Inventory(product_id=333, condition="new", quantity=1, restock_level=10, available=1)
+        inventory = Inventory(product_id=333, condition="new", quantity=1,
+                                restock_level=10, available=1)
         if not Inventory.find(inventory.product_id, inventory.condition):
             inventory.create()
-        inventory = Inventory(product_id=444, condition="new", quantity=1, restock_level=10, available=0)
+        inventory = Inventory(product_id=444, condition="new", quantity=1,
+                                restock_level=10, available=0)
         if not Inventory.find(inventory.product_id, inventory.condition):
             inventory.create()
         inventories = Inventory.find_by_product_id(444)
