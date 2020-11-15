@@ -303,7 +303,7 @@ class InventoryAPITest(TestCase):
 
 
 
-            if a < 0 or key != keys.KEY_AMT:
+            if a <= 0 or key != keys.KEY_AMT:
                 self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
             else:
                 self.assertEqual(resp.status_code, status.HTTP_200_OK)

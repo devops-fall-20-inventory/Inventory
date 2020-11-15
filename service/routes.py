@@ -24,6 +24,7 @@ DELETE /inventory/<int:product_id>/condition/<string:condition>
     - Given the product_id and condition this updates available = 0
 """
 
+import re
 import uuid
 from functools import wraps
 from flask import request, render_template
@@ -31,7 +32,7 @@ from flask_api import status
 from flask_restplus import Api, Resource, fields, reqparse
 
 from service import keys
-from service.model import Inventory
+from service.model import Inventory, DataValidationError
 from . import app
 
 authorizations = {
@@ -59,20 +60,23 @@ api = Api(app,
 # Define the model so that the docs reflect what can be sent
 inventory_model = api.model('Inventory', {
     keys.KEY_PID: fields.Integer(readOnly=True,
-                    description='The unique id assigned internally by service'),
-    keys.KEY_CND: fields.String(required=True,
-                    description='Condition of the product ["new", "used", "open box"]'),
+            description='The unique id assigned to a Product\n'),
+    keys.KEY_CND: fields.String(readOnly=True,
+            description='Condition of the product\nNote: {} in ["new", "used", "open box"]'
+            .format(keys.KEY_CND)),
     keys.KEY_QTY: fields.Integer(required=True,
-                    description='The Quantity of Inventory item'),
+            description='The Quantity of Inventory item\nNote: {}>=0'.format(keys.KEY_QTY)),
     keys.KEY_LVL: fields.Integer(required=True,
-                    description='The level below which restock this item is triggered'),
+            description='The level below which restock this item is triggered.\nNote: {}>=0'
+            .format(keys.KEY_LVL)),
     keys.KEY_AVL: fields.Integer(required=True,
-                    description='Is the Inventory avaialble for purchase?')
+            description='Is the Product avaialble?\nNote: Available (1) or Unavailable(0)')
 })
 
-restock_model = api.model('Inventory', {
+restock_model = api.model('Restock', {
     keys.KEY_AMT: fields.Integer(required=True,
-                    description='The Amount to add to the existing Quantity'),
+            description='The Amount to add to the existing Quantity\nNote: {} >= 0'
+            .format(keys.KEY_AMT)),
 })
 
 # query string arguments
@@ -167,22 +171,28 @@ class InventoryBase(Resource):
         Creates a Inventory
         This endpoint will create a Inventory based the data in the body that is posted
         """
+        try:
+            app.logger.info("Request to create an Inventory record")
+            inventory = Inventory()
+            inventory.deserialize(api.payload)
+            inventory.validate_data()
 
-        app.logger.info("Request to create an Inventory record")
-        inventory = Inventory()
-        inventory.deserialize(api.payload)
-        inventory.validate_data()
+            if Inventory.find(api.payload[keys.KEY_PID], api.payload[keys.KEY_CND]):
+                api.abort(status.HTTP_409_CONFLICT,
+                        "Inventory with ({}, {})".format(inventory.product_id, inventory.condition))
 
-        if Inventory.find(api.payload[keys.KEY_PID], api.payload[keys.KEY_CND]):
-            api.abort(status.HTTP_409_CONFLICT,
-                    "Inventory with ({}, {})".format(inventory.product_id, inventory.condition))
-
-        inventory.create()
-        location_url = api.url_for(InventoryResource, product_id=inventory.product_id,
-            condition=inventory.condition, _external=True)
-        app.logger.info("Inventory ({}, {}) created."\
-                        .format(inventory.product_id, inventory.condition))
-        return inventory.serialize(), status.HTTP_201_CREATED, {'Location': location_url}
+            inventory.create()
+            location_url = api.url_for(InventoryResource, product_id=inventory.product_id,
+                condition=inventory.condition, _external=True)
+            app.logger.info("Inventory ({}, {}) created."\
+                            .format(inventory.product_id, inventory.condition))
+            return inventory.serialize(), status.HTTP_201_CREATED, {'Location': location_url}
+        except KeyError as err:
+            api.abort(status.HTTP_400_BAD_REQUEST, err)
+        except TypeError as err:
+            api.abort(status.HTTP_400_BAD_REQUEST, err)
+        except DataValidationError as err:
+            api.abort(status.HTTP_400_BAD_REQUEST, err)
 
 ####################################################################################################
 #  PATH: /inventory/{product_id}/condition/{condition}
@@ -234,22 +244,28 @@ class InventoryResource(Resource):
         """
         app.logger.info("Request to update inventory with key ({}, {})"\
                         .format(product_id, condition))
+        try:
+            inventory = Inventory.find(product_id, condition)
+            if not inventory:
+                api.abort(status.HTTP_404_NOT_FOUND,
+                        "Inventory with ({}, {})".format(product_id, condition))
 
-        inventory = Inventory.find(product_id, condition)
-        if not inventory:
-            api.abort(status.HTTP_404_NOT_FOUND,
-                    "Inventory with ({}, {})".format(product_id, condition))
-
-        resp_old = inventory.serialize()
-        resp_new = api.payload
-        for key in resp_old.keys():
-            if key in resp_new:
-                resp_old[key] = resp_new[key]
-        inventory.deserialize(resp_old)
-        inventory.validate_data()
-        inventory.update()
-        app.logger.info("Inventory ({}, {}) updated.".format(product_id, condition))
-        return inventory.serialize(), status.HTTP_200_OK
+            resp_old = inventory.serialize()
+            resp_new = api.payload
+            for key in resp_old.keys():
+                if key in resp_new:
+                    resp_old[key] = resp_new[key]
+            inventory.deserialize(resp_old)
+            inventory.validate_data()
+            inventory.update()
+            app.logger.info("Inventory ({}, {}) updated.".format(product_id, condition))
+            return inventory.serialize(), status.HTTP_200_OK
+        except KeyError as err:
+            api.abort(status.HTTP_400_BAD_REQUEST, err)
+        except TypeError as err:
+            api.abort(status.HTTP_400_BAD_REQUEST, err)
+        except DataValidationError as err:
+            api.abort(status.HTTP_400_BAD_REQUEST, err)
 
     #------------------------------------------------------------------
     # DELETE AN INVENTORY
@@ -296,29 +312,41 @@ class InventoryResourceRestock(Resource):
         """
         app.logger.info("Request to update inventory with key ({}, {})"\
                         .format(product_id, condition))
+        try:
+            # Check if the record exists
+            inventory = Inventory.find(product_id, condition)
+            if not inventory:
+                api.abort(status.HTTP_404_NOT_FOUND,
+                    "Inventory with ({}, {})".format(product_id, condition))
 
-        # Check if the record exists
-        inventory = Inventory.find(product_id, condition)
-        if not inventory:
-            api.abort(status.HTTP_404_NOT_FOUND,
-                "Inventory with ({}, {})".format(product_id, condition))
+            # Checking for keys.KEY_AMT keyword
+            json = request.get_json()
+            json = api.payload
+            if "amount" not in json.keys():
+                api.abort(status.HTTP_400_BAD_REQUEST, "Invalid data: Amount missing")
 
-        # Checking for keys.KEY_AMT keyword
-        json = request.get_json()
-        json = api.payload
-        if "amount" not in json.keys():
-            api.abort(status.HTTP_400_BAD_REQUEST, "Invalid data: Amount missing")
+            # Checking for amount >= 0
+            amount = json[keys.KEY_AMT]
+            regex = "^\-?\d+$"
+            if not re.search(regex, str(amount)):
+                api.abort(status.HTTP_400_BAD_REQUEST, "Invalid data: Amount must be an integer")
+            else:
+                if isinstance(amount, str):
+                    amount = int(amount)
+                if amount <= 0:
+                    api.abort(status.HTTP_400_BAD_REQUEST, "Invalid data: Amount <= 0")
 
-        # Checking for amount >= 0
-        amount = json[keys.KEY_AMT]
-        if amount<0:
-            api.abort(status.HTTP_400_BAD_REQUEST, "Invalid data: Amount <= 0")
-
-        inventory.quantity += amount
-        inventory.validate_data()
-        inventory.update()
-        app.logger.info("Inventory ({}, {}) restocked.".format(product_id, condition))
-        return inventory.serialize(), status.HTTP_200_OK
+            inventory.quantity += amount
+            inventory.validate_data()
+            inventory.update()
+            app.logger.info("Inventory ({}, {}) restocked.".format(product_id, condition))
+            return inventory.serialize(), status.HTTP_200_OK
+        except KeyError as err:
+            api.abort(status.HTTP_400_BAD_REQUEST, err)
+        except TypeError as err:
+            api.abort(status.HTTP_400_BAD_REQUEST, err)
+        except DataValidationError as err:
+            api.abort(status.HTTP_400_BAD_REQUEST, err)
 
 ####################################################################################################
 #  PATH: /inventory/{product_id}/condition/{condition}/activate
@@ -342,18 +370,20 @@ class InventoryResourceActivate(Resource):
         """
         app.logger.info("Request to update inventory with key ({}, {})"\
                         .format(product_id, condition))
+        try:
+            # Check if the record exists
+            inventory = Inventory.find(product_id, condition)
+            if not inventory:
+                api.abort(status.HTTP_404_NOT_FOUND,
+                    "Inventory with ({}, {})".format(product_id, condition))
 
-        # Check if the record exists
-        inventory = Inventory.find(product_id, condition)
-        if not inventory:
-            api.abort(status.HTTP_404_NOT_FOUND,
-                "Inventory with ({}, {})".format(product_id, condition))
-
-        inventory.available = 1
-        inventory.validate_data()
-        inventory.update()
-        app.logger.info("Inventory ({}, {}) restocked.".format(product_id, condition))
-        return inventory.serialize(), status.HTTP_200_OK
+            inventory.available = 1
+            inventory.validate_data()
+            inventory.update()
+            app.logger.info("Inventory ({}, {}) restocked.".format(product_id, condition))
+            return inventory.serialize(), status.HTTP_200_OK
+        except DataValidationError as err:
+            api.abort(status.HTTP_400_BAD_REQUEST, err)
 
 ####################################################################################################
 #  PATH: /inventory/{product_id}/condition/{condition}/deactivate
@@ -377,15 +407,17 @@ class InventoryResourceDeactivate(Resource):
         """
         app.logger.info("Request to update inventory with key ({}, {})"\
                         .format(product_id, condition))
+        try:
+            # Check if the record exists
+            inventory = Inventory.find(product_id, condition)
+            if not inventory:
+                api.abort(status.HTTP_404_NOT_FOUND,
+                    "Inventory with ({}, {})".format(product_id, condition))
 
-        # Check if the record exists
-        inventory = Inventory.find(product_id, condition)
-        if not inventory:
-            api.abort(status.HTTP_404_NOT_FOUND,
-                "Inventory with ({}, {})".format(product_id, condition))
-
-        inventory.available = 0
-        inventory.validate_data()
-        inventory.update()
-        app.logger.info("Inventory ({}, {}) restocked.".format(product_id, condition))
-        return inventory.serialize(), status.HTTP_200_OK
+            inventory.available = 0
+            inventory.validate_data()
+            inventory.update()
+            app.logger.info("Inventory ({}, {}) restocked.".format(product_id, condition))
+            return inventory.serialize(), status.HTTP_200_OK
+        except DataValidationError as err:
+            api.abort(status.HTTP_400_BAD_REQUEST, err)
