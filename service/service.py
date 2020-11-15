@@ -31,11 +31,9 @@ Paths:
 from flask import jsonify, request, url_for, make_response, abort
 from flask_api import status
 from service.model import Inventory
-from service.error_handlers import *
-
+from service.error_handlers import bad_request, forbidden, not_found, create_conflict_error
+# from service import keys
 from . import app
-
-DEMO_MSG = "Inventory REST API Service"
 
 ################################################################################
 # INDEX
@@ -45,14 +43,6 @@ def index():
     """ Root URL response """
     app.logger.info("Request for Root URL")
     return app.send_static_file('index.html')
-    # return (
-    #     jsonify(
-    #         name=DEMO_MSG,
-    #         version="1.0",
-    #         paths=url_for("list_inventories", _external=True),
-    #     ),
-    #     status.HTTP_200_OK,
-    # )
 
 ################################################################################
 # GET
@@ -137,9 +127,9 @@ def create_inventory():
 @app.route("/inventory/<int:product_id>/condition/<string:condition>", methods=["DELETE"])
 def delete_inventory(product_id, condition):
     """Deletes an inventory with the given product_id and condition"""
+    inventory = Inventory.find(product_id, condition)
     app.logger.info("Request to delete inventory with key ({}, {})"\
                     .format(product_id, condition))
-    inventory = Inventory.find(product_id, condition)
     if inventory:
         inventory.delete()
     app.logger.info("Inventory with product_id {} and condition {} deleted"

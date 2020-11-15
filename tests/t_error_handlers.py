@@ -4,20 +4,16 @@ Inventory Error Handlers Test Suite
 2.
 """
 import os
-import logging
+import sys
 from unittest import TestCase
-from unittest.mock import MagicMock, patch
-
-from werkzeug import test
-from werkzeug.wrappers import Response
 from flask_api import status
-from service import app, service, error_handlers
-from service.service import app, init_db
-from service.model import Inventory, DataValidationError, DB, DBError
-from service.error_handlers import method_not_supported, internal_server_error
-from .inventory_factory import InventoryFactory
 
-DATABASE_URI = os.getenv("DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres")
+sys.path.append("..")
+from service.model import DB
+from service import app, routes, keys
+from service.error_handlers import method_not_supported, internal_server_error
+
+DATABASE_URI = os.getenv(keys.KEY_DB_URI, keys.DATABASE_URI_LOCAL)
 
 class InventoryErrTest(TestCase):
     """
@@ -32,8 +28,8 @@ class InventoryErrTest(TestCase):
         app.debug = False
         app.testing = True
         # Set up the test database
-        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
-        init_db()
+        app.config[keys.KEY_SQL_ALC] = DATABASE_URI
+        routes.init_db()
 
     @classmethod
     def tearDownClass(cls):
@@ -58,15 +54,9 @@ class InventoryErrTest(TestCase):
         """Testing HTTP_405_METHOD_NOT_ALLOWED error"""
         return method_not_supported("Testing 405")
 
-    @patch('service.service.create_inventory')
-    def test_415(self, mock_415):
-        """Testing HTTP_415_UNSUPPORTED_MEDIA_TYPE error"""
-        resp = self.app.post("/inventory", json="", content_type="text")
-        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-
     def test_500(self):
         """Testing HTTP_500_INTERNAL_SERVER_ERROR error"""
         try:
-            r = 1/0
+            1/0
         except Exception:
             return internal_server_error("Testing 500")

@@ -25,18 +25,18 @@ def step_impl(context):
     headers = {'Content-Type': 'application/json'}
 
     # list all of the inventories and delete them one by one
-    context.resp = requests.get(context.base_url + '/inventory', headers=headers)
+    context.resp = requests.get(context.base_url + '/api/inventory')
     if context.resp.status_code == 200:
         for pet in context.resp.json():
-            url = "{}/inventory/{}/condition/{}"\
+            url = "{}/api/inventory/{}/condition/{}"\
                 .format(context.base_url, str(pet["product_id"]), str(pet["condition"]))
-            context.resp = requests.delete(url, headers=headers)
+            context.resp = requests.delete(url)
             expect(context.resp.status_code).to_equal(204)
-    resp = requests.get(context.base_url + '/inventory', headers=headers)
-    expect(resp.status_code).to_equal(404)
+        resp = requests.get(context.base_url + '/api/inventory')
+        expect(resp.status_code).to_equal(404)
 
     # load the database with new pets
-    create_url = context.base_url + '/inventory'
+    create_url = context.base_url + '/api/inventory'
     acceptable_status_codes = [201, 409]
     for row in context.table:
         data = {

@@ -115,7 +115,7 @@ $(function () {
         if(verify_attributes(pid, qty, lvl, cnd, avl)) {
             var ajax = $.ajax({
                 type: "POST",
-                url: "/inventory",
+                url: "/api/inventory",
                 contentType: "application/json",
                 data: JSON.stringify(data),
             });
@@ -152,7 +152,7 @@ $(function () {
         if (pid && cnd!=undefined) {
             var ajax = $.ajax({
                 type: "GET",
-                url: "/inventory/" + pid + "/condition/" + cnd,
+                url: "/api/inventory/" + pid + "/condition/" + cnd,
                 contentType: "application/json",
                 data: ''
             })
@@ -199,7 +199,7 @@ $(function () {
         //     if (query.length == 0)
         //         query = '&' + query
         // }
-        var url = "/inventory";
+        var url = "/api/inventory";
         if (query && query.length > 0)
             url = url + "?" + query;
 
@@ -285,7 +285,7 @@ $(function () {
         if(verify_attributes(pid, qty, lvl, cnd, avl)) {
             var ajax = $.ajax({
                 type: "PUT",
-                url: "/inventory/" + pid + "/condition/" + cnd,
+                url: "/api/inventory/" + pid + "/condition/" + cnd,
                 contentType: "application/json",
                 data: JSON.stringify(data)
             });
@@ -327,7 +327,7 @@ $(function () {
         if(verify_product_id(pid) && verify_condition(cnd) && verify_quantity(qty)) {
             var ajax = $.ajax({
                 type: "PUT",
-                url: "/inventory/" + pid + "/condition/" + cnd + "/restock",
+                url: "/api/inventory/" + pid + "/condition/" + cnd + "/restock",
                 contentType: "application/json",
                 data: JSON.stringify(data)
             });
@@ -364,7 +364,7 @@ $(function () {
         if (verify_product_id(pid) && verify_condition(cnd)) {
             var ajax = $.ajax({
                 type: "PUT",
-                url: "/inventory/" + pid + "/condition/" + cnd +"/activate"
+                url: "/api/inventory/" + pid + "/condition/" + cnd +"/activate"
             });
             ajax.done(function(res){
                 update_form_data(res)
@@ -399,7 +399,7 @@ $(function () {
         if (verify_product_id(pid) && verify_condition(cnd)) {
             var ajax = $.ajax({
                 type: "PUT",
-                url: "/inventory/" + pid + "/condition/" + cnd +"/deactivate"
+                url: "/api/inventory/" + pid + "/condition/" + cnd +"/deactivate"
             });
             ajax.done(function(res){
                 update_form_data(res)
@@ -434,7 +434,7 @@ $(function () {
         if (verify_product_id(pid) && verify_condition(cnd)) {
             var ajax = $.ajax({
                 type: "DELETE",
-                url: "/inventory/" + pid + "/condition/" + cnd,
+                url: "/api/inventory/" + pid + "/condition/" + cnd,
                 contentType: "application/json",
                 data: '',
             });
