@@ -12,8 +12,8 @@ applications:
   - python_buildpack
   timeout: 180
   services:
+  - Inventory-Dev
   - Inventory-Prod
-  - Inventory-Test
   env:
     FLASK_APP : service:app
     FLASK_DEBUG : false
