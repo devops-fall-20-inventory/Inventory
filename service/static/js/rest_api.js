@@ -67,7 +67,7 @@ $(function () {
     }
 
     function verify_available(avl) {
-        var regex = /^\-?\d+$/;
+        var regex = /^\-?\d{1}$/;
         if (regex.exec(avl) && parseInt(avl)>=0) return true;
         return false;
     }
@@ -76,6 +76,30 @@ $(function () {
         var list = ["new","used","open box"];
         if (list.includes(cnd)) return true;
         return false;
+    }
+
+    // extracting condition
+    function get_condition() {
+        var cnd_val = $("#inventory_condition").val();
+        var cnd = undefined;
+        if (cnd_val == "new")
+            cnd = "new";
+        else if (cnd_val == "used")
+            cnd = "used";
+        else if (cnd_val == "open-box")
+            cnd = "open box";
+        return cnd;
+    }
+
+    // extracting available
+    function get_available() {
+        var avl_val = $("#inventory_available").val();
+        var avl = undefined;
+        if (avl_val == "true")
+            avl = 1;
+        else if (avl_val == "false")
+            avl = 0;
+        return avl;
     }
 
     // ****************************************
@@ -87,32 +111,18 @@ $(function () {
         var pid = $("#inventory_product_id").val();
         var qty = $("#inventory_quantity").val();
         var lvl = $("#inventory_restock_level").val();
-
-        var cnd_val = $("#inventory_condition").val();
-        var cnd = undefined;
-        if (cnd_val == "new")
-            cnd = "new";
-        else if (cnd_val == "used")
-            cnd = "used"
-        else if (cnd_val == "open-box")
-            cnd = "open box";
-
-        var avl_val = $("#inventory_available").val();
-        var avl = undefined;
-        if (avl_val == "true")
-            val = 1;
-        if (avl_val == "false")
-            avl = 0;
-
-        var data = {
-            "product_id": parseInt(pid),
-            "condition": cnd,
-            "quantity": parseInt(qty),
-            "restock_level": parseInt(lvl),
-            "available": avl
-        };
+        var cnd = get_condition();
+        var avl = get_available();
 
         if(verify_attributes(pid, qty, lvl, cnd, avl)) {
+            var data = {
+                "product_id": parseInt(pid),
+                "condition": cnd,
+                "quantity": parseInt(qty),
+                "restock_level": parseInt(lvl),
+                "available": avl
+            };
+
             var ajax = $.ajax({
                 type: "POST",
                 url: "/api/inventory",
@@ -140,21 +150,12 @@ $(function () {
     $("#retrieve-btn").click(function () {
 
         var pid = $("#inventory_product_id").val();
-        var cnd_val = $("#inventory_condition").val();
-        var cnd = undefined;
-        if (cnd_val == "new")
-            cnd = "new";
-        else if (cnd_val == "used")
-            cnd = "used"
-        else if (cnd_val == "open-box")
-            cnd = "open box";
+        var cnd = get_condition();
 
-        if (pid && cnd!=undefined) {
+        if (verify_product_id(pid) && verify_condition(cnd)) {
             var ajax = $.ajax({
                 type: "GET",
-                url: "/api/inventory/" + pid + "/condition/" + cnd,
-                contentType: "application/json",
-                data: ''
+                url: "/api/inventory/" + pid + "/condition/" + cnd
             })
             ajax.done(function(res) {
                 update_form_data(res)
@@ -176,38 +177,41 @@ $(function () {
 
     $("#search-btn").click(function () {
 
-        var pid = $("#inventory_product_id").val();
-        // var qty = $("#inventory_quantity").val();
-        // var cnd_val = $("#inventory_condition").val();
-        // var cnd = "new";
-        // if (cnd_val == "used")
-        //     cnd = "used"
-        // else if (cnd_val == "open-box")
-        //     cnd = "open box";
-
         var query = "";
-        if (pid) {
+
+        var pid = $("#inventory_product_id").val();
+        if (verify_product_id(pid)) {
             query += 'product_id=' + pid
         }
-        // if (qty) {
+
+        // var qty = $("#inventory_quantity").val();
+        // if (verify_quantity(qty)) {
         //     query += 'quantity=' + qty;
         //     if (query.length == 0)
         //         query = '&' + query
         // }
-        // if (cnd) {
+
+        // var cnd = get_condition();
+        // if (verify_condition(cnd)) {
         //     query += 'condition=' + cnd;
         //     if (query.length == 0)
         //         query = '&' + query
         // }
+
+        // var avl = get_available();
+        // if (verify_available(avl)) {
+        //     query += 'available=' + avl;
+        //     if (query.length == 0)
+        //         query = '&' + query
+        // }
+
         var url = "/api/inventory";
         if (query && query.length > 0)
             url = url + "?" + query;
 
         var ajax = $.ajax({
             type: "GET",
-            url: url,
-            contentType: "application/json",
-            data: ''
+            url: url
         });
         ajax.done(function(res) {
             //flash_message(res.toSource())
@@ -260,21 +264,8 @@ $(function () {
         var qty = $("#inventory_quantity").val();
         var lvl = $("#inventory_restock_level").val();
 
-        var cnd_val = $("#inventory_condition").val();
-        var cnd = undefined;
-        if (cnd_val == "new")
-            cnd = "new";
-        else if (cnd_val == "used")
-            cnd = "used"
-        else if (cnd_val == "open-box")
-            cnd = "open box";
-
-        var avl_val = $("#inventory_available").val();
-        var avl = undefined;
-        if (avl_val == "true")
-            val = 1;
-        if (avl_val == "false")
-            avl = 0;
+        var cnd = get_condition();
+        var avl = get_available();
 
         var data = {
             "quantity": parseInt(qty),
@@ -311,14 +302,7 @@ $(function () {
 
         var pid = $("#inventory_product_id").val();
         var qty = $("#inventory_quantity").val();
-        var cnd_val = $("#inventory_condition").val();
-        var cnd = undefined;
-        if (cnd_val == "new")
-            cnd = "new";
-        else if (cnd_val == "used")
-            cnd = "used"
-        else if (cnd_val == "open-box")
-            cnd = "open box";
+        var cnd = get_condition();
 
         var data = {
             "amount": parseInt(qty)
@@ -352,14 +336,7 @@ $(function () {
     $("#activate-btn").click(function () {
 
         var pid = $("#inventory_product_id").val();
-        var cnd_val = $("#inventory_condition").val();
-        var cnd = undefined;
-        if (cnd_val == "new")
-            cnd = "new";
-        else if (cnd_val == "used")
-            cnd = "used"
-        else if (cnd_val == "open-box")
-            cnd = "open box";
+        var cnd = get_condition();
 
         if (verify_product_id(pid) && verify_condition(cnd)) {
             var ajax = $.ajax({
@@ -387,14 +364,7 @@ $(function () {
     $("#deactivate-btn").click(function () {
 
         var pid = $("#inventory_product_id").val();
-        var cnd_val = $("#inventory_condition").val();
-        var cnd = undefined;
-        if (cnd_val == "new")
-            cnd = "new";
-        else if (cnd_val == "used")
-            cnd = "used"
-        else if (cnd_val == "open-box")
-            cnd = "open box";
+        var cnd = get_condition();
 
         if (verify_product_id(pid) && verify_condition(cnd)) {
             var ajax = $.ajax({
@@ -422,14 +392,7 @@ $(function () {
     $("#delete-btn").click(function () {
 
         var pid = $("#inventory_product_id").val();
-        var cnd_val = $("#inventory_condition").val();
-        var cnd = undefined;
-        if (cnd_val == "new")
-            cnd = "new";
-        else if (cnd_val == "used")
-            cnd = "used"
-        else if (cnd_val == "open-box")
-            cnd = "open box";
+        var cnd = get_condition();
 
         if (verify_product_id(pid) && verify_condition(cnd)) {
             var ajax = $.ajax({
