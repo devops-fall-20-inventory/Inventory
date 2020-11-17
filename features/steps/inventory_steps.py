@@ -158,7 +158,17 @@ def step_impl(context, element_value, element_name):
 ####################################################################################################
 # Scenario: Get all Inventories
 ####################################################################################################
-
+@then('I must see "{element_name}" in the results')
+def step_impl(context, element_name):
+    # element = context.driver.find_element_by_id('search_results')
+    # expect(element.text).to_contain(name)
+    found = WebDriverWait(context.driver, WAIT_SECONDS).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, 'search_results'),
+            element_name
+        )
+    )
+    expect(found).to_be(True)
 ####################################################################################################
 # Scenario: Get a specific Inventory
 ####################################################################################################
@@ -170,6 +180,12 @@ def step_impl(context, element_value, element_name):
 ####################################################################################################
 # Scenario: Delete an Inventory
 ####################################################################################################
+@then('I must not see "{element_name}" in the results')
+def step_impl(context, element_name):
+    element = context.driver.find_element_by_id('search_results')
+    error_msg = "I should not see '%s' in '%s'" % (element_name, element.text)
+    ensure(element_name in element.text, False, error_msg)
+
 
 ####################################################################################################
 # Scenario: Update an Inventory
