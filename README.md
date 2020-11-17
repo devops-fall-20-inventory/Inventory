@@ -39,7 +39,8 @@ The inventory resource keeps track of how many of each product we have in our wa
 
 ### API endpoints
 
-IBM CloudFoundry URL: `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud`
+IBM CloudFoundry URL (Dev): `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud`
+IBM CloudFoundry URL (Prod): `https://nyu-inventory-service-f20-prod.us-south.cf.appdomain.cloud`
 
 | Method | URI | Description | Content-Type | Sample Payload |
 | --- | --- | ------ | --- | ------- |
