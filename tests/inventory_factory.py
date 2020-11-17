@@ -1,9 +1,10 @@
 """
 Test Factory to make fake objects for testing
 """
+import sys
 import factory
 import factory.fuzzy as fuzzy
-import service.model as models
+from service import keys
 from service.model import Inventory
 
 test_data_file = "data_to_test.csv"
@@ -15,30 +16,29 @@ class InventoryFactory(factory.Factory):
         model = Inventory
 
     product_id = factory.Sequence(lambda n: n)
-    condition = fuzzy.FuzzyChoice(choices=models.CONDITIONS)
-    quantity = fuzzy.FuzzyInteger(models.QTY_LOW,models.QTY_HIGH,models.QTY_STEP)
-    restock_level = fuzzy.FuzzyInteger(models.QTY_LOW,models.RESTOCK_LVL,models.QTY_STEP)
-    available = fuzzy.FuzzyChoice(choices=[models.AVAILABLE_TRUE, models.AVAILABLE_FALSE])
+    condition = fuzzy.FuzzyChoice(choices=keys.CONDITIONS)
+    quantity = fuzzy.FuzzyInteger(keys.QTY_LOW,keys.QTY_HIGH,keys.QTY_STEP)
+    restock_level = fuzzy.FuzzyInteger(keys.QTY_LOW,keys.RESTOCK_LVL,keys.QTY_STEP)
+    available = fuzzy.FuzzyChoice(choices=[keys.AVAILABLE_TRUE, keys.AVAILABLE_FALSE])
 
     ######################################################################
     ## Helper
     ######################################################################
     @staticmethod
-    def get_data(type=models.ATTR_DEFAULT):
+    def get_data(type=keys.ATTR_DEFAULT):
         """
         This extracts command line arguments
         """
-        if len(sys.argv)<model.MAX_ATTR+1:
+        if len(sys.argv)<keys.MAX_ATTR+1:
             return None,None,None,None,None
-        elif type==models.ATTR_DEFAULT or len(sys.argv)>models.MAX_ATTR:
-            pid = sys.argv[models.ATTR_PRODUCT_ID]
-            cnd = sys.argv[models.ATTR_CONDITION]
-            qty = sys.argv[models.ATTR_QUANTITY]
-            lvl = sys.argv[models.ATTR_RESTOCK_LEVEL]
-            avl = sys.argv[models.ATTR_AVAILABLE]
+        if type==keys.ATTR_DEFAULT or len(sys.argv)>keys.MAX_ATTR:
+            pid = sys.argv[keys.ATTR_PRODUCT_ID]
+            cnd = sys.argv[keys.ATTR_CONDITION]
+            qty = sys.argv[keys.ATTR_QUANTITY]
+            lvl = sys.argv[keys.ATTR_RESTOCK_LEVEL]
+            avl = sys.argv[keys.ATTR_AVAILABLE]
             return pid,cnd,qty,lvl,avl
-        else:
-            sys.argv[type]
+        sys.argv[type]
 
     @staticmethod
     def read_test_data():
