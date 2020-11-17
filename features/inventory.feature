@@ -64,9 +64,21 @@ Scenario: Create an Inventory
     And I should see "0" in the "Restock_level" field
     And I should see "False" in the "Available" dropdown
 
-Scenario: Get all Inventories
+Scenario: Get all Inventory Records' Details
+    When I visit the "Home Page"
+    And I press the "Search" button
+    Then I should see the message "Success"
 
-Scenario: Get a specific Inventory
+Scenario: Get a specific Inventory Record's Details
+    When I visit the "Home Page"
+    And I set the "Product_id" to "573"
+    And I select "Used" in the "Condition" dropdown
+    And I press the "Search" button    
+    Then I should see the message "Success"
+    And I should see "Used" in the "Condition" dropdown
+    And I should see "6" in the "Quantity" field
+    And I should see "2" in the "Restock_level" field
+    And I should see "True" in the "Available" dropdown
 
 Scenario: Get a collection of Inventories with a Request parameter
 

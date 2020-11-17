@@ -139,3 +139,5 @@ unittests.xml
 
 #idea  
 **/.idea/workspace.xml
+
+.vscode/
