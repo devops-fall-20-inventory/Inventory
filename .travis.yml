@@ -1,19 +1,34 @@
+sudo: required
+
 language: python
 python:
     - "3.7.9"
 
-# command to install dependencies
-install: "pip install -r requirements.txt"
+addons:
+  chrome: stable
+
+services:
+    - postgresql
+    - docker
+
+env:
+  # - DATABASE_URI="postgres://kzrksdnq:WzlB6RFvzR20BExuPM7_y1xgBi6LmvWO@rajje.db.elephantsql.com:5432/kzrksdnq"
+
+install:
+    - sudo apt-get install -y chromium-chromedriver python3-selenium
+    - "pip install -r requirements.txt"
 
 # commands to run tests
 before_script:
     - pg_isready
+    - chromedriver --version
+    - gunicorn --log-level=critical --bind=127.0.0.1:5000 service:app &  # start a Web server in the background
+    - sleep 5 # give Web server some time to bind to sockets, etc
+    - curl -I http://localhost:5000/  # make sure the service is up
 
 script:
     - nosetests
+    - behave
 
 after_success:
     - codecov
-
-services:
-    - postgresql

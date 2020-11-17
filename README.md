@@ -39,17 +39,18 @@ The inventory resource keeps track of how many of each product we have in our wa
 
 ### API endpoints
 
-| Method | URI | Description |
-| --- | --- | --- |
-| `POST` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory` | Given the data body this creates an inventory record in the DB |
-| `GET` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory` | Returns a collection of all inventories in the DB |
-| `GET` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory?product_id=<int>` | Returns a collection of all inventories matching `product_id` |
-| `GET` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>` | Returns the inventory record with the given `product_id` and `condition` |
-| `PUT` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>` | Updates the inventory record with the given `product_id` and `condition` |
-| `PUT` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/activate` | Given the `product_id` and `condition` this updates `available = 1` |
-| `PUT` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/deactivate` | Given the `product_id` and `condition` this updates `available = 0` |
-| `PUT` | `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud/inventory/<int:product_id>/condition/<string:condition>/restock` | Given the `product_id`, `condition` and `amount` (body) this updates `quantity += amount` |
-| `DELETE` | `/inventory/<int:product_id>/condition/<string:condition>` | Given the `product_id` and `condition` this updates `available = 0` |
+IBM CloudFoundry URL: `https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud`
+
+| Method | URI | Description | Content-Type | Sample Payload |
+| --- | --- | ------ | --- | ------- |
+| `POST` | `/api/inventory` | Given the data body this creates an inventory record in the DB | application/json | ```{"product_id": 321,"condition": "new","available": 1,"quantity": 2,"restock_level": 1}``` |
+| `GET` | `/api/inventory` | Returns a collection of all inventories in the DB | N/A | N/A |
+| `GET` | `/api/inventory/<int:product_id>/condition/<string:condition>` | Returns the inventory record with the given `product_id` and `condition` | N/A | N/A |
+| `PUT` | `/api/inventory/<int:product_id>/condition/<string:condition>` | Updates the inventory record with the given `product_id` and `condition` | application/json | ```{"available": 1,"quantity": 2,"restock_level": 1}``` |
+| `PUT` | `/api/inventory/<int:product_id>/condition/<string:condition>/activate` | Given the `product_id` and `condition` this updates `available = 1` | N/A | N/A |
+| `PUT` | `/api/inventory/<int:product_id>/condition/<string:condition>/deactivate` | Given the `product_id` and `condition` this updates `available = 0` | N/A | N/A |
+| `PUT` | `/api/inventory/<int:product_id>/condition/<string:condition>/restock` | Given the `product_id`, `condition` and `amount` (body) this updates `quantity += amount` | application/json | `{"amount": 2}` |
+| `DELETE` | `/api/inventory/<int:product_id>/condition/<string:condition>` | Given the `product_id` and `condition` this updates `available = 0` | N/A | N/A |
 
 ### Testing and Running locally
 

@@ -9,7 +9,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support import expected_conditions
 
-logger  = logging.getLogger('inventory-bdd')
+ID_PREFIX = "inventory_"
+BTN_SUFFIX = "-btn"
+FLASH_MSG_ID = "flash_message"
+ATTR_VALUE = "value"
+WAIT_SECONDS = int(getenv('WAIT_SECONDS', '60'))
+BASE_URL = getenv('BASE_URL', 'http://localhost:5000')
+
 ####################################################################################################
 # Scenario: Inventory server is running
 ####################################################################################################
@@ -19,19 +25,18 @@ def step_impl(context):
     headers = {'Content-Type': 'application/json'}
 
     # list all of the inventories and delete them one by one
-    context.resp = requests.get(context.base_url + '/inventory', headers=headers)
+    context.resp = requests.get(context.base_url + '/api/inventory')
     if context.resp.status_code == 200:
         for pet in context.resp.json():
-            url = "{}/inventory/{}/condition/{}"\
+            url = "{}/api/inventory/{}/condition/{}"\
                 .format(context.base_url, str(pet["product_id"]), str(pet["condition"]))
-            context.resp = requests.delete(url, headers=headers)
+            context.resp = requests.delete(url)
             expect(context.resp.status_code).to_equal(204)
-        logger.debug('DB cleared')
-    resp = requests.get(context.base_url + '/inventory', headers=headers)
-    expect(resp.status_code).to_equal(404)
+        resp = requests.get(context.base_url + '/api/inventory')
+        expect(resp.status_code).to_equal(404)
 
     # load the database with new pets
-    create_url = context.base_url + '/inventory'
+    create_url = context.base_url + '/api/inventory'
     acceptable_status_codes = [201, 409]
     for row in context.table:
         data = {
@@ -44,7 +49,6 @@ def step_impl(context):
         payload = json.dumps(data)
         context.resp = requests.post(create_url, data=payload, headers=headers)
         expect(acceptable_status_codes).to_contain(context.resp.status_code)
-    logger.debug('DB (re)populated')
 
 
 @when('I visit the "Home page"')
@@ -61,110 +65,110 @@ def step_impl(context, message):
 def step_impl(context, message):
     error_msg = "I should not see '{}' in '{}'".format(message, context.resp.text)
     ensure(message in context.resp.text, False, error_msg)
-    
+
 
 ####################################################################################################
 # Scenario: Create an Inventory
 ####################################################################################################
-@when('I set the "Product_id" to "1"')
-def step_impl(context):
-    raise NotImplementedError('STEP: When I set the "Product_id" to "1"')
+
+@when('I set the "{element_name}" to "{element_value}"')
+def step_impl(context, element_name, element_value):
+    element_id = ID_PREFIX + element_name.lower()
+    element = context.driver.find_element_by_id(element_id)
+    element.clear()
+    element.send_keys(element_value)
 
 
-@when('I set the "Quantity" to "5"')
-def step_impl(context):
-    raise NotImplementedError('STEP: When I set the "Quantity" to "5"')
+@when('I select "{element_value}" in the "{element_name}" dropdown')
+def step_impl(context, element_value, element_name):
+    element_id = ID_PREFIX + element_name.lower()
+    element = Select(context.driver.find_element_by_id(element_id))
+    element.select_by_visible_text(element_value)
 
 
-@when('I set the "Restock_level" to "0"')
-def step_impl(context):
-    raise NotImplementedError('STEP: When I set the "Restock_level" to "0"')
+@when('I press the "{element_button}" button')
+def step_impl(context, element_button):
+    button_id = element_button.lower() + BTN_SUFFIX
+    context.driver.find_element_by_id(button_id).click()
 
 
-@when('I select "New" in the "Condition" dropdown')
-def step_impl(context):
-    raise NotImplementedError('STEP: When I select "New" in the "Condition" dropdown')
+@then('I should see the message "{message}"')
+def step_impl(context, message):
+    # element = context.driver.find_element_by_id('flash_message')
+    # expect(element.text).to_contain(message)
+    found = WebDriverWait(context.driver, WAIT_SECONDS).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, FLASH_MSG_ID),
+            message
+        )
+    )
+    expect(found).to_be(True)
+
+####################################################################################################
+
+@when('I copy the "{element_name}" field')
+def step_impl(context, element_name):
+    element_id = ID_PREFIX + element_name.lower()
+    element = WebDriverWait(context.driver, WAIT_SECONDS).until(
+        expected_conditions.presence_of_element_located((By.ID, element_id))
+    )
+    context.clipboard = element.get_attribute(ATTR_VALUE)
+    logging.info('Clipboard contains: %s', context.clipboard)
 
 
-@when('I select "True" in the "Available" dropdown')
-def step_impl(context):
-    raise NotImplementedError('STEP: When I select "True" in the "Available" dropdown')
+@then('the "{element_name}" field should be empty')
+def step_impl(context, element_name):
+    element_id = ID_PREFIX + element_name.lower()
+    element = context.driver.find_element_by_id(element_id)
+    expect(element.get_attribute(ATTR_VALUE)).to_be(u'')
+
+####################################################################################################
+
+@when('I paste the "{element_name}" field')
+def step_impl(context, element_name):
+    element_id = ID_PREFIX + element_name.lower()
+    element = WebDriverWait(context.driver, WAIT_SECONDS).until(
+        expected_conditions.presence_of_element_located((By.ID, element_id))
+    )
+    element.clear()
+    element.send_keys(context.clipboard)
 
 
-@when('I press the "Create" button')
-def step_impl(context):
-    raise NotImplementedError('STEP: When I press the "Create" button')
+@then('I should see "{element_value}" in the "{element_name}" field')
+def step_impl(context, element_value, element_name):
+    element_id = ID_PREFIX + element_name.lower()
+    # element = context.driver.find_element_by_id(element_id)
+    # expect(element.get_attribute(ATTR_VALUE)).to_equal(element_value)
+    found = WebDriverWait(context.driver, WAIT_SECONDS).until(
+        expected_conditions.text_to_be_present_in_element_value(
+            (By.ID, element_id),
+            element_value
+        )
+    )
+    expect(found).to_be(True)
 
 
-@then('I should see the message "Success"')
-def step_impl(context):
-    raise NotImplementedError('STEP: Then I should see the message "Success"')
-
-
-@when('I copy the "Product_id" field')
-def step_impl(context):
-    raise NotImplementedError('STEP: When I copy the "Product_id" field')
-
-
-@when('I press the "Clear" button')
-def step_impl(context):
-    raise NotImplementedError('STEP: When I press the "Clear" button')
-
-
-@then('the "Product_id" field should be empty')
-def step_impl(context):
-    raise NotImplementedError('STEP: Then the "Product_id" field should be empty')
-
-
-@then('the "Quantity" field should be empty')
-def step_impl(context):
-    raise NotImplementedError('STEP: Then the "Quantity" field should be empty')
-
-
-@then('the "Restock_level" field should be empty')
-def step_impl(context):
-    raise NotImplementedError('STEP: Then the "Restock_level" field should be empty')
-
-
-@when('I press the "Product_id" field')
-def step_impl(context):
-    raise NotImplementedError('STEP: When I press the "Product_id" field')
-
-
-@when('I press the "Retrieve" button')
-def step_impl(context):
-    raise NotImplementedError('STEP: When I press the "Retrieve" button')
-
-
-@then('I should see "1" in the "Product_id" field')
-def step_impl(context):
-    raise NotImplementedError('STEP: Then I should see "1" in the "Product_id" field')
-
-
-@then('I should see "New" in the "Condition" dropdown')
-def step_impl(context):
-    raise NotImplementedError('STEP: Then I should see "New" in the "Condition" dropdown')
-
-
-@then('I should see "5" in the "Quantity" field')
-def step_impl(context):
-    raise NotImplementedError('STEP: Then I should see "5" in the "Quantity" field')
-
-
-@then('I should see "0" in the "Restock_level" field')
-def step_impl(context):
-    raise NotImplementedError('STEP: Then I should see "0" in the "Restock_level" field')
-
-
-@then('I should see "True" in the "Available" dropdown')
-def step_impl(context):
-    raise NotImplementedError('STEP: Then I should see "True" in the "Available" dropdown')
+@then('I should see "{element_value}" in the "{element_name}" dropdown')
+def step_impl(context, element_value, element_name):
+    element_id = ID_PREFIX + element_name.lower()
+    element = Select(context.driver.find_element_by_id(element_id))
+    expect(element.first_selected_option.text).to_equal(element_value)
 
 
 ####################################################################################################
 # Scenario: Get all Inventories
 ####################################################################################################
-
+@then('I must see "{element_name}" in the results')
+def step_impl(context, element_name):
+    # element = context.driver.find_element_by_id('search_results')
+    # expect(element.text).to_contain(name)
+    found = WebDriverWait(context.driver, WAIT_SECONDS).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, 'search_results'),
+            element_name
+        )
+    )
+    expect(found).to_be(True)
 ####################################################################################################
 # Scenario: Get a specific Inventory
 ####################################################################################################
@@ -176,6 +180,12 @@ def step_impl(context):
 ####################################################################################################
 # Scenario: Delete an Inventory
 ####################################################################################################
+@then('I must not see "{element_name}" in the results')
+def step_impl(context, element_name):
+    element = context.driver.find_element_by_id('search_results')
+    error_msg = "I should not see '%s' in '%s'" % (element_name, element.text)
+    ensure(element_name in element.text, False, error_msg)
+
 
 ####################################################################################################
 # Scenario: Update an Inventory
@@ -188,6 +198,38 @@ def step_impl(context):
 ####################################################################################################
 # Scenario: Activate an Inventory
 ####################################################################################################
+@when('I change the "{element_name}" dropdown to "{text_string}"')
+def step_impl(context, element_name, text_string):
+    element_id = ID_PREFIX + element_name.lower()
+    # element = context.driver.find_element_by_id(element_id)
+    element = WebDriverWait(context.driver, WAIT_SECONDS).until(
+        expected_conditions.presence_of_element_located((By.ID, element_id))
+    )
+    #element.clear()
+    element = Select(element)
+    element.select_by_visible_text(text_string)
+
+@then('I should see "{name}" with availability set to "{available}" in the results')
+def step_impl(context, name, available):
+    # element = context.driver.find_element_by_id('search_results')
+    # expect(element.text).to_contain(name)
+    found = WebDriverWait(context.driver, WAIT_SECONDS).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, 'search_results'),
+            name
+        ) and
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, 'search_results'),
+            available
+        )
+    )
+    expect(found).to_be(True)
+
+@then('I should not see "{name}" with availability set to "{available}" in the results')
+def step_impl(context, name, available):
+    element = context.driver.find_element_by_id('search_results')
+    error_msg = "I should not see '%s' in '%s' with availability set to '%s'" % (name, element.text, available)
+    ensure((name in element.text and available in element.text), False, error_msg)
 
 ####################################################################################################
 # Scenario: Deactivate an Inventory
