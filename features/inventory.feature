@@ -71,8 +71,41 @@ Scenario: Get a specific Inventory
 Scenario: Get a collection of Inventories with a Request parameter
 
 Scenario: Update an Inventory
+    When I visit the "Home Page"
+    And I set the "Product_id" to "573"
+    And I set the "Quantity" to "7"
+    And I set the "Restock_level" to "3"
+    And I select "Used" in the "Condition" dropdown
+    And I select "False" in the "Available" dropdown
+    And I press the "Update" button
+    Then I should see the message "Success"
+
+    When I copy the "Product_id" field
+    And I press the "Clear" button
+    And I paste the "Product_id" field
+    And I select "Used" in the "Condition" dropdown
+    And I press the "Retrieve" button
+    Then I should see "573" in the "Product_id" field
+    And I should see "7" in the "Quantity" field
+    And I should see "3" in the "Restock_level" field
+    And I should see "Used" in the "Condition" dropdown
+    And I should see "False" in the "Available" dropdown
 
 Scenario: Restock an Inventory
+    When I visit the "Home Page"
+    And I set the "Product_id" to "208"
+    And I set the "Quantity" to "10"
+    And I select "Open Box" in the "Condition" dropdown
+    And I press the "Restock" button
+    Then I should see the message "Success"
+
+    When I copy the "Product_id" field
+    And I press the "Clear" button
+    And I paste the "Product_id" field
+    And I select "Open Box" in the "Condition" dropdown
+    And I press the "Retrieve" button
+    Then I should see "10" in the "Quantity" field
+
 
 Scenario: Activate an Inventory
 
