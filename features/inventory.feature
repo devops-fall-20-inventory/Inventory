@@ -9,7 +9,6 @@ Background: Sample database records
         | 963           | new       | 5         | 1             | 1         |
         | 573           | used      | 6         | 2             | 1         |
         | 208           | open box  | 0         | 0             | 0         |
-
 Scenario: Inventory server is running
     When I visit the "Home Page"
     Then I should see "Inventory REST API Service" in the title
@@ -69,6 +68,23 @@ Scenario: Get all Inventories
 Scenario: Get a specific Inventory
 
 Scenario: Get a collection of Inventories with a Request parameter
+    Given the following inventories
+        | product_id    | condition | quantity  | restock_level | available |
+        | 963           | new       | 5         | 1             | 1         |
+        | 573           | used      | 6         | 2             | 1         |
+        | 208           | open box  | 0         | 0             | 0         |
+        | 963           | used      | 2         | 1             | 1         |
+    When I visit the "Home Page"
+    And I set the "Product_id" to "963"
+    And I press the "Search" button
+    Then I must see "963" in the results
+    And I must see "new" in the results
+    And I must see "used" in the results
+
+    When I visit the "Home Page"
+    And I set the "Product_id" to "963321"
+    And I press the "Search" button
+    Then I should see the message "There are no records in the Database. You have requested this URI [/api/inventory] but did you mean /api/inventory or /api/inventory//condition/ or /api/inventory//condition//restock ?"
 
 Scenario: Update an Inventory
 
@@ -119,3 +135,23 @@ Scenario: Deactivate an Inventory
     And I should see "False" in the "Available" dropdown
 
 Scenario: Delete an Inventory
+    When I visit the "Home Page"
+    And I set the "Product_id" to "573"
+    And I select "Used" in the "Condition" dropdown
+    And I press the "Delete" button
+    Then I should see the message "Inventory has been Deleted!"
+    When I press the "Search" button
+    Then I must not see "573" in the results
+
+    When I set the "Product_id" to "208"
+    And I press the "Search" button
+    Then I should see "208" in the "Product_id" field
+    And I should see "Open Box" in the "Condition" dropdown
+    When I press the "Delete" button
+    Then I should see the message "Inventory has been Deleted!"
+
+    When I visit the "Home Page"
+    And I set the "Product_id" to "98292"
+    And I select "Used" in the "Condition" dropdown
+    And I press the "Delete" button
+    Then I should see the message "Inventory has been Deleted!"
