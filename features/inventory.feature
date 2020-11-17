@@ -64,9 +64,12 @@ Scenario: Create an Inventory
     And I should see "0" in the "Restock_level" field
     And I should see "False" in the "Available" dropdown
 
-Scenario: Get all Inventories
+Scenario: Get all Inventory Records' Details
+    When I visit the "Home Page"
+    And I press the "Search" button
+    Then I should see the message "Success"
 
-Scenario: Get a specific Inventory
+Scenario: Get a specific Inventory Record's Details
 
 Scenario: Get a collection of Inventories with a Request parameter
 
