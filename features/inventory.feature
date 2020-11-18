@@ -64,11 +64,20 @@ Scenario: Create an Inventory
     And I should see "False" in the "Available" dropdown
 
 Scenario: Get all Inventory Records' Details
+    Given the following inventories
+        | product_id    | condition | quantity  | restock_level | available |
+        | 963           | new       | 5         | 2             | 1         |
+
     When I visit the "Home Page"
     And I press the "Search" button
     Then I should see the message "Success"
+    And I must see "963" in the results
+    And I must see "new" in the results
+    And I must see "5" in the results
+    And I must see "2" in the results
+    And I must see "1" in the results 
 
-Scenario: Get a specific Inventory Record's Details
+Scenario: Get a specific Inventory Record's Details with Request parameter
     When I visit the "Home Page"
     And I set the "Product_id" to "573"
     And I select "Used" in the "Condition" dropdown
@@ -78,6 +87,12 @@ Scenario: Get a specific Inventory Record's Details
     And I should see "6" in the "Quantity" field
     And I should see "2" in the "Restock_level" field
     And I should see "True" in the "Available" dropdown
+    And I must see "573" in the results
+    And I must see "used" in the results
+    And I must see "6" in the results
+    And I must see "2" in the results
+    And I must see "1" in the results
+
 
 Scenario: Get a collection of Inventories with a Request parameter
     Given the following inventories
