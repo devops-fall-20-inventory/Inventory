@@ -4,35 +4,34 @@ language: python
 python:
     - "3.7.9"
 
+addons:
+  chrome: stable
+
 services:
-    - postgresql
+  - postgresql
 
 env:
   - DATABASE_URI="postgres://postgres:postgres@localhost:5432/postgres"
 
 install:
+    - sudo apt-get install -y chromium-chromedriver python3-selenium
     - pip install -r requirements.txt
+
+before_script:
+    - psql -c "create database postgres;" -U postgres
+    - psql --version
+    - which chromedriver
+    - chromedriver --version
+    - gunicorn --log-level=critical --bind=127.0.0.1:5000 service:app &  # start a Web server in the background
+    - sleep 5 # give Web server some time to bind to sockets, etc
+    - curl -I http://localhost:5000/  # make sure the service is up
 
 jobs:
   include:
-    - stage: Test
-      name: "TDD"
-      script: nosetests
-    - stage: Test
-      name: "BDD"
-      addons:
-        chrome: stable
-      install:
-        - sudo apt-get install -y chromium-chromedriver python3-selenium
-      before_script:
-        - pg_isready
-        - which chromedriver
-        - chromedriver --version
-        - gunicorn --log-level=critical --bind=127.0.0.1:5000 service:app &  # start a Web server in the background
-        - sleep 5 # give Web server some time to bind to sockets, etc
-        - curl -I http://localhost:5000/  # make sure the service is up
-      script: behave
-
-after_success:
-    - codecov
-    - pylint service
+      - stage: Test
+        script: nosetests
+        after_success:
+            - codecov
+            - pylint service
+      - stage: Test
+        script: behave
