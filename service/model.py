@@ -179,32 +179,45 @@ class Inventory(DB.Model):
 
     ######################################################################
     @classmethod
-    def all(cls):
+    def find_all(cls):
         """ Returns all of the Inventory records in the database """
         LOGGER.info("Processing GET all Inventory records")
         return cls.query.all()
 
-    #
-    @classmethod
-    def find(cls, pid, condition):
-        """ Finds an Inventory record by its product_id and condition """
-        LOGGER.info("Processing GET for product_id {} and condition {}".format(pid, condition))
-        return cls.query.get((pid, condition))
-
-    #
-    @classmethod
-    def find_or_404(cls, pid, condition):
-        """ Find an Inventory record by its product_id and condition """
-        LOGGER.info("Processing GET or 404 for product_id {} and condition {}"\
-                    .format(pid, condition))
-        return cls.query.get_or_404((pid, condition))
-
-    #
     @classmethod
     def find_by_product_id(cls, product_id):
         """ Returns the Inventory record with the given product_id
-        Args:
-            product_id (Integer): the product_id of the Inventory record you want to match
+        Args: product_id (Integer): the product_id of the Inventory records you want to match
         """
         LOGGER.info("Processing GET query for {}...".format(product_id))
         return cls.query.filter(cls.product_id == product_id)
+
+    @classmethod
+    def find_by_condition(cls, condition):
+        """ Returns the Inventory record with the given condition
+        Args: condition (String): the condition of the Inventory records you want to match
+        """
+        LOGGER.info("Processing GET query for {}...".format(condition))
+        return cls.query.filter(cls.condition == condition)
+
+    @classmethod
+    def find_by_available(cls, available):
+        """ Returns the Inventory record with the given availability
+        Args: available (Integer): the availability of the Inventory records you want to match
+        """
+        LOGGER.info("Processing GET query for {}...".format(available))
+        return cls.query.filter(cls.available == available)
+
+    @classmethod
+    def find_by_quantity(cls, quantity):
+        """ Returns the Inventory record with quantity >= the given quantity
+        Args: quantity (Integer): the Inventory records with the minimum quantity
+        """
+        LOGGER.info("Processing GET query for {}...".format(quantity))
+        return cls.query.filter(cls.quantity >= quantity)
+
+    @classmethod
+    def find_by_product_id_condition(cls, pid, condition):
+        """ Finds an Inventory record by its product_id and condition """
+        LOGGER.info("Processing GET for product_id {} and condition {}".format(pid, condition))
+        return cls.query.get((pid, condition))

@@ -4,6 +4,7 @@ Test cases can be run with the following:
 """
 import os
 import sys
+import logging
 from unittest import TestCase
 from flask_api import status
 
@@ -46,7 +47,6 @@ class InventoryAPITest(TestCase):
 
     def tearDown(self):
         DB.session.remove()
-        DB.drop_all()
 
 ######################################################################
 #  T E S T   C A S E S
@@ -140,6 +140,20 @@ class InventoryAPITest(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
 
+    def test_create_errors(self):
+        """ Testing Create Error: [DataValidationError] """
+        data = {
+            keys.KEY_PID: 666,
+            keys.KEY_CND: "hellow",
+            keys.KEY_QTY: 1,
+            keys.KEY_LVL: 1,
+            keys.KEY_AVL: 1
+        }
+        resp = self.app.post(
+            "/api/inventory", json=data, content_type=keys.KEY_CONTENT_TYPE_JSON
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
     ##################################################################
     # Testing GET
     def test_list_inventory(self):
@@ -151,29 +165,97 @@ class InventoryAPITest(TestCase):
 
     def test_list_inventory_not_found(self):
         """Get the entire inventory list"""
-        N = 10
         resp = self.app.get("/api/inventory")
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.get_json()), 0)
 
-    def test_get_inventory_not_found(self):
-        """Get a product inventory that's not available"""
-        resp = self.app.get("/api/inventory?product_id=0")
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_get_inventory_by_pid(self):
+    def test_get_inventory_by_product_id(self):
         """Get inventory details by [product_id]"""
+        N = 10
+        count = 0
+        inventories = self._create_inventories(N)
+        for inv in inventories:
+            resp = self.app.get("/api/inventory?product_id={}".format(inv.product_id))
+            self.assertEqual(resp.status_code, status.HTTP_200_OK)
+            count += len(resp.get_json())
+        self.assertEqual(count, N)
+
+    def test_get_inventory_by_product_id_not_found(self):
+        """Get inventory details by [product_id]: NOT FOUND"""
+        resp = self.app.get("/api/inventory?product_id=0")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.get_json()), 0)
+
+        test_inventory = self._create_inventories(1)[0]
+        resp = self.app.get("/api/inventory?product_id={}".format(test_inventory.product_id+3))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.get_json()), 0)
+
+    def test_get_inventory_by_condition(self):
+        """Get inventory details by [condition]"""
+        count_new = 0
+        count_used = 0
+        count_open = 0
         inventories = self._create_inventories(10)
         for inv in inventories:
-            test_pid = inv.product_id
-            resp = self.app.get("/api/inventory?product_id={}".format(test_pid))
-            self.assertEqual(resp.status_code, status.HTTP_200_OK)
+            if inv.condition == "new":
+                count_new += 1
+            elif inv.condition == "used":
+                count_used += 1
+            elif inv.condition == "open box":
+                count_open += 1
 
-    def test_get_inventory_by_pid_2(self):
-        """Get inventory details by [product_id] 2"""
-        test_inventory = self._create_inventories(1)[0]
-        pid = test_inventory.product_id
-        resp = self.app.get("/api/inventory?product_id={}".format(pid+3))
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        resp = self.app.get("/api/inventory?condition=new")
+        if resp.status_code == status.HTTP_200_OK:
+            count = len(resp.get_json())
+            self.assertEqual(count, count_new)
+
+        resp = self.app.get("/api/inventory?condition=used")
+        if resp.status_code == status.HTTP_200_OK:
+            count = len(resp.get_json())
+            self.assertEqual(count, count_used)
+
+        resp = self.app.get("/api/inventory?condition=open box")
+        if resp.status_code == status.HTTP_200_OK:
+            count = len(resp.get_json())
+            self.assertEqual(count, count_open)
+
+    def test_get_inventory_by_quantity(self):
+        """Get inventory details by [quantity]"""
+        N = 10
+        count = 0
+        inventories = self._create_inventories(N)
+        quantities = [inv.quantity for inv in inventories]
+        mn = min(quantities)
+        resp = self.app.get("/api/inventory?quantity={}".format(mn))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        count = len(resp.get_json())
+        self.assertEqual(count, N)
+
+    def test_get_inventory_by_available(self):
+        """Get inventory details by [available]"""
+        N = 10
+        n_0 = 0
+        n_1 = 0
+        count_0 = 0
+        count_1 = 0
+        inventories = self._create_inventories(N)
+        for inv in inventories:
+            if inv.available == 0:
+                n_0 += 1
+            elif inv.available == 1:
+                n_1 += 1
+        self.assertEqual(n_0+n_1, N)
+
+        resp = self.app.get("/api/inventory?available=0")
+        if resp.status_code == status.HTTP_200_OK:
+            count_0 = len(resp.get_json())
+            self.assertEqual(count_0, n_0)
+            
+        resp = self.app.get("/api/inventory?available=1")
+        if resp.status_code == status.HTTP_200_OK:
+            count_1 = len(resp.get_json())
+            self.assertEqual(count_1, n_1)
 
     def test_get_inventory_by_pid_condition(self):
         """Get inventory details by [product_id, condition]"""
@@ -186,8 +268,8 @@ class InventoryAPITest(TestCase):
         self.assertEqual(data[keys.KEY_PID], pid)
         self.assertEqual(data[keys.KEY_CND], cnd)
 
-    def test_get_inventory_by_pid_condition_404(self):
-        """Get inventory details by [product_id, condition] 404"""
+    def test_get_inventory_by_pid_condition_not_found(self):
+        """Get inventory details by [product_id, condition]: NOT FOUND"""
         test_inventory = self._create_inventories(1)[0]
         resp = self.app.get("/api/inventory/{}/condition/{}".format(999, "new"),\
                             content_type=keys.KEY_CONTENT_TYPE_JSON)
@@ -335,3 +417,35 @@ class InventoryAPITest(TestCase):
                 "/api/inventory/{}/condition/{}/deactivate".format(pid, cnd),
             )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_errors(self):
+        """ Testing Update Error: [DataValidationError] """
+        test_inventory = InventoryFactory()
+        resp = self.app.post(
+            "/api/inventory", json=test_inventory.serialize(), content_type=keys.KEY_CONTENT_TYPE_JSON
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        data = {
+            keys.KEY_PID: test_inventory.product_id,
+            keys.KEY_CND: test_inventory.condition,
+            keys.KEY_QTY: "-12",
+            keys.KEY_LVL: 1,
+            keys.KEY_AVL: 1
+        }
+        resp = self.app.put(
+                "/api/inventory/{}/condition/{}".format(test_inventory.product_id, test_inventory.condition),
+                json=data,
+                content_type=keys.KEY_CONTENT_TYPE_JSON,
+            )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+        data = {
+            keys.KEY_AMT: "-helo"
+        }
+        resp = self.app.put(
+                "/api/inventory/{}/condition/{}/restock".format(test_inventory.product_id, test_inventory.condition),
+                json=data,
+                content_type=keys.KEY_CONTENT_TYPE_JSON,
+            )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)

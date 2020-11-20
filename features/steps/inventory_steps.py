@@ -13,7 +13,7 @@ ID_PREFIX = "inventory_"
 BTN_SUFFIX = "-btn"
 FLASH_MSG_ID = "flash_message"
 ATTR_VALUE = "value"
-WAIT_SECONDS = int(getenv('WAIT_SECONDS', '60'))
+WAIT_SECONDS = int(getenv('WAIT_SECONDS', '180'))
 BASE_URL = getenv('BASE_URL', 'http://localhost:5000')
 
 ####################################################################################################
@@ -33,11 +33,10 @@ def step_impl(context):
             context.resp = requests.delete(url)
             expect(context.resp.status_code).to_equal(204)
         resp = requests.get(context.base_url + '/api/inventory')
-        expect(resp.status_code).to_equal(404)
+        expect(resp.status_code).to_equal(200)
 
     # load the database with new pets
     create_url = context.base_url + '/api/inventory'
-    acceptable_status_codes = [201, 409]
     for row in context.table:
         data = {
             "product_id": row['product_id'],
@@ -48,7 +47,7 @@ def step_impl(context):
         }
         payload = json.dumps(data)
         context.resp = requests.post(create_url, data=payload, headers=headers)
-        expect(acceptable_status_codes).to_contain(context.resp.status_code)
+        expect(context.resp.status_code).to_equal(201)
 
 
 @when('I visit the "Home page"')
