@@ -10,8 +10,7 @@ applications:
   host: nyu-inventory-service-f20
   domain: us-south.cf.appdomain.cloud
   disk_quota: 1024M
-  buildpacks:
-  - python_buildpack
+  buildpack: python_buildpack
   timeout: 180
 #   services:
 #   - Inventory-Dev
