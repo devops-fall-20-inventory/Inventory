@@ -158,16 +158,16 @@ $(function () {
                 url: "/api/inventory/" + pid + "/condition/" + cnd
             })
             ajax.done(function(res) {
-                update_form_data(res)
-                flash_message("Success")
+                update_form_data(res);
+                flash_message("Success");
             });
             ajax.fail(function(res){
-                clear_form_data()
-                flash_message(res.responseJSON.message)
+                clear_form_data();
+                flash_message(res.responseJSON.message);
             });
         }
         else {
-            flash_message('Product ID AND Condition is required')
+            flash_message('Product ID AND Condition is required');
         }
     });
 
@@ -177,36 +177,27 @@ $(function () {
 
     $("#search-btn").click(function () {
 
-        var query = "";
-
+        var query = undefined;
         var pid = $("#inventory_product_id").val();
+        var qty = $("#inventory_quantity").val();
+        var cnd = get_condition();
+        var avl = get_available();
+
         if (verify_product_id(pid)) {
-            query += 'product_id=' + pid
+            query = 'product_id=' + pid;
+        }
+        else if (verify_quantity(qty)) {
+            query = 'quantity=' + qty;
+        }
+        else if (verify_condition(cnd)) {
+            query = 'condition=' + cnd;
+        }
+        else if (verify_available(avl)) {
+            query = 'available=' + avl;
         }
 
-        // var qty = $("#inventory_quantity").val();
-        // if (verify_quantity(qty)) {
-        //     query += 'quantity=' + qty;
-        //     if (query.length == 0)
-        //         query = '&' + query
-        // }
-
-        // var cnd = get_condition();
-        // if (verify_condition(cnd)) {
-        //     query += 'condition=' + cnd;
-        //     if (query.length == 0)
-        //         query = '&' + query
-        // }
-
-        // var avl = get_available();
-        // if (verify_available(avl)) {
-        //     query += 'available=' + avl;
-        //     if (query.length == 0)
-        //         query = '&' + query
-        // }
-
         var url = "/api/inventory";
-        if (query && query.length > 0)
+        if (query != undefined && query.length > 0)
             url = url + "?" + query;
 
         var ajax = $.ajax({
@@ -241,7 +232,7 @@ $(function () {
             flash_message("Success")
         });
         ajax.fail(function(res) {
-            flash_message(res.responseJSON.message)
+            flash_message("Failure")
         });
     });
 
@@ -250,8 +241,8 @@ $(function () {
     // ****************************************
 
     $("#clear-btn").click(function () {
-        $("#inventory_product_id").val("");
-        clear_form_data()
+        clear_form_data();
+        $("#search_results").empty();
     });
 
     // ****************************************
