@@ -158,13 +158,12 @@ Scenario: Update an Inventory
     When I copy the "Product_id" field
     And I press the "Clear" button
     And I paste the "Product_id" field
-    And I select "Used" in the "Condition" dropdown
-    And I press the "Retrieve" button
-    Then I should see "573" in the "Product_id" field
-    And I should see "7" in the "Quantity" field
-    And I should see "3" in the "Restock_level" field
-    And I should see "Used" in the "Condition" dropdown
-    And I should see "False" in the "Available" dropdown
+    And I press the "Search" button
+    Then I must see "573" in the results
+    And I must see "7" in the results
+    And I must see "3" in the results
+    And I must see "used" in the results
+    And I must see "0" in the results
 
 Scenario: Restock an Inventory
     When I visit the "Home Page"
@@ -178,9 +177,9 @@ Scenario: Restock an Inventory
     When I copy the "Product_id" field
     And I press the "Clear" button
     And I paste the "Product_id" field
-    And I select "Open Box" in the "Condition" dropdown
-    And I press the "Retrieve" button
-    Then I should see "10" in the "Quantity" field
+    And I press the "Search" button
+    Then I must see "208" in the results
+    And I must see "10" in the results
 
 Scenario: Activate an Inventory
     When I visit the "Home Page"
@@ -199,10 +198,9 @@ Scenario: Activate an Inventory
     When I copy the "Product_id" field
     And I press the "Clear" button
     And I paste the "Product_id" field
-    And I select "Used" in the "Condition" dropdown
-    And I press the "Retrieve" button
-    Then I should see "208" in the "Product_id" field
-    And I should see "True" in the "Available" dropdown
+    And I press the "Search" button
+    Then I must see "208" in the results
+    And I must see "1" in the results
 
 Scenario: Deactivate an Inventory
     When I visit the "Home Page"
@@ -221,11 +219,10 @@ Scenario: Deactivate an Inventory
     When I copy the "Product_id" field
     And I press the "Clear" button
     And I paste the "Product_id" field
-    And I select "New" in the "Condition" dropdown
-    And I press the "Retrieve" button
-    Then I should see "963" in the "Product_id" field
-    And I should see "False" in the "Available" dropdown
-
+    And I press the "Search" button
+    Then I must see "963" in the results
+    And I must see "0" in the results
+    
 ####################################################################################################
 # DELETE
 Scenario: Delete an Inventory
