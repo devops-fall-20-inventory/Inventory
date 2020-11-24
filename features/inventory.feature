@@ -40,12 +40,10 @@ Scenario: Create an Inventory
 
     When I paste the "Product_id" field
     And I select "New" in the "Condition" dropdown
-    And I press the "Retrieve" button
-    Then I should see "1" in the "Product_id" field
-    And I should see "New" in the "Condition" dropdown
-    And I should see "5" in the "Quantity" field
-    And I should see "0" in the "Restock_level" field
-    And I should see "False" in the "Available" dropdown
+    And I press the "Search" button
+    Then I must see "1" in the results
+    And I must see "new" in the results
+    And I must see "5" in the results
 
     When I press the "Clear" button
     And I set the "Product_id" to "2"
@@ -64,12 +62,10 @@ Scenario: Create an Inventory
 
     When I paste the "Product_id" field
     And I select "New" in the "Condition" dropdown
-    And I press the "Retrieve" button
-    Then I should see "2" in the "Product_id" field
-    And I should see "New" in the "Condition" dropdown
-    And I should see "1" in the "Quantity" field
-    And I should see "0" in the "Restock_level" field
-    And I should see "False" in the "Available" dropdown
+    And I press the "Search" button
+    Then I must see "2" in the results
+    And I must see "new" in the results
+    And I must see "1" in the results
 
 ####################################################################################################
 # GET
@@ -186,11 +182,6 @@ Scenario: Activate an Inventory
     And I press the "Clear" button
     And I set the "Product_id" to "208"
     And I select "Used" in the "Condition" dropdown
-    And I press the "Retrieve" button
-    Then I should see the message "Success"
-    And I should see "0" in the "Quantity" field
-    And I should see "0" in the "Restock_level" field
-    And I should see "False" in the "Available" dropdown
 
     When I press the "Activate" button
     Then I should see the message "Success"
@@ -207,11 +198,6 @@ Scenario: Deactivate an Inventory
     And I press the "Clear" button
     And I set the "Product_id" to "963"
     And I select "New" in the "Condition" dropdown
-    And I press the "Retrieve" button
-    Then I should see the message "Success"
-    And I should see "5" in the "Quantity" field
-    And I should see "1" in the "Restock_level" field
-    And I should see "True" in the "Available" dropdown
 
     When I press the "Deactivate" button
     Then I should see the message "Success"
