@@ -37,7 +37,7 @@ The inventory resource keeps track of how many of each product we have in our wa
 | `restock_level` | `<integer>` | `restock_level > 0` |
 | `available` | `<integer>` | `available == 0/1` |
 
-### API endpoints
+### API endpoints 
 
 Base URL (Dev): `https://nyu-inventory-service-f20-dev.us-south.cf.appdomain.cloud`
 
