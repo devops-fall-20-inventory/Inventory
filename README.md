@@ -40,7 +40,6 @@ The inventory resource keeps track of how many of each product we have in our wa
 ### API endpoints 
 
 URL-Dev: https://nyu-inventory-service-f20-dev.us-south.cf.appdomain.cloud
-
 URL-Prod: https://nyu-inventory-service-f20.us-south.cf.appdomain.cloud
 
 | Method | URI | Description | Content-Type | Sample Payload |
